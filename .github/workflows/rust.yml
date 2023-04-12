@@ -1,0 +1,33 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  kble:
+    uses: ./.github/workflows/verify-crate.yaml
+    with:
+      target_dir: ./kble
+
+  kble-serialport:
+    uses: ./.github/workflows/verify-crate.yaml
+    with:
+      target_dir: ./kble-serialport
+
+  kble-tfsync:
+    uses: ./.github/workflows/verify-crate.yaml
+    with:
+      target_dir: ./kble-tfsync
+
+  kble-socket:
+    uses: ./.github/workflows/verify-crate.yaml
+    with:
+      target_dir: ./kble-socket

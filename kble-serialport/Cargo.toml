@@ -1,0 +1,18 @@
+[package]
+name = "kble-serialport"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive", "env"] }
+futures = "0.3"
+tokio = { version = "1", features = ["full"] }
+kble-socket = { path = "../kble-socket", features = ["axum"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+axum = { version = "0.6", default-features = false, features = ["tokio", "tower-log", "http1", "ws", "query"] }
+tokio-serial = "5.4"
+serde = { version = "1", features = ["derive"] }

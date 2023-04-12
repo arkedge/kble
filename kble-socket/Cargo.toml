@@ -1,0 +1,19 @@
+[package]
+name = "kble-socket"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+futures-util = { version = "0.3", features = ["sink"] }
+pin-project-lite = { version = "0.2", optional = true }
+tokio = "1"
+tokio-tungstenite = { version = "0.18", optional = true }
+axum = { version = "0.6", optional = true, default-features = false }
+
+[features]
+stdio = ["tokio/io-std", "dep:pin-project-lite"]
+tungstenite = ["dep:tokio-tungstenite"]
+axum = ["axum/ws"]
