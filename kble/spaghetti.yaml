@@ -1,9 +1,0 @@
-plugs:
-  #tfsync: exec:kble-tfsync
-  #serial: ws://localhost:9600/open?port=/dev/ttyUSB0&baudrate=9600
-  sils: ws://localhost:22545
-  gaia: ws://localhost:8910
-
-links:
-  sils: gaia
-  gaia: sils
