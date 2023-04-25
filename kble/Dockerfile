@@ -1,4 +1,4 @@
-FROM ghcr.io/sksat/cargo-chef-docker:1.65.0-bullseye as chef
+FROM ghcr.io/sksat/cargo-chef-docker:1.69.0-bullseye as chef
 
 WORKDIR /build
 
