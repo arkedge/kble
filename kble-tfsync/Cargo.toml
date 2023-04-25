@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "1"
 futures = "0.3"
 tokio = { version = "1", features = ["full"] }
-kble-socket = { path = "../kble-socket", features = ["stdio", "tungstenite"] }
+kble-socket = { version = "0.1.0", features = ["stdio", "tungstenite"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 bytes = { version = "1" }
 tracing = "0.1"
