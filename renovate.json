@@ -3,6 +3,13 @@
   "extends": [
     "config:base"
   ],
+  "packageRules": [
+    {
+      "groupName": "Rust",
+      "groupSlug": "rust",
+      "packageNames": ["rust", "ghcr.io/sksat/cargo-chef-docker"]
+    }
+  ],
   "regexManagers": [
     {
       "fileMatch": ["^rust-toolchain(\\.toml)?$"],
