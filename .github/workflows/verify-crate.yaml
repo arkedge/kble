@@ -33,7 +33,7 @@ jobs:
         id: toolchain
         working-directory: .
         run: |
-          echo "toolchain=$(awk -F'[ ="]+' '$1 == "channel" { print $2 }' rust-toolchain)" >> "$GITHUB_OUTPUT"
+          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
