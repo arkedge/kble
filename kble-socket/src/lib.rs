@@ -1,11 +1,11 @@
 use std::pin::Pin;
 
 use anyhow::Result;
-
+use bytes::Bytes;
 use futures_util::{Sink, Stream};
 
-pub type SocketSink = Pin<Box<dyn Sink<Vec<u8>, Error = anyhow::Error> + Send + 'static>>;
-pub type SocketStream = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send + 'static>>;
+pub type SocketSink = Pin<Box<dyn Sink<Bytes, Error = anyhow::Error> + Send + 'static>>;
+pub type SocketStream = Pin<Box<dyn Stream<Item = Result<Bytes>> + Send + 'static>>;
 
 #[cfg(feature = "stdio")]
 mod stdio;

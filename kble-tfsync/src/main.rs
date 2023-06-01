@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
         };
         buf.extend_from_slice(&chunk?);
         while let Some(frame) = codec.decode(&mut buf)? {
-            tx.send(frame.into()).await?;
+            tx.send(frame).await?;
         }
     }
     Ok(())

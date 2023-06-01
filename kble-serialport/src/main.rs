@@ -8,6 +8,7 @@ use axum::{
     routing::get,
     Router,
 };
+use bytes::BytesMut;
 use clap::Parser;
 use futures::{SinkExt, StreamExt};
 use kble_socket::from_axum;
@@ -140,13 +141,12 @@ async fn handle_ws(ws: WebSocket, serialport: SerialStream) {
     let (mut rx, mut tx) = tokio::io::split(serialport);
     let rx_fut = async {
         loop {
-            let mut buf = vec![0u8; 4096];
-            let len = rx.read(&mut buf).await?;
+            let mut buf = BytesMut::with_capacity(4096);
+            let len = rx.read_buf(&mut buf).await?;
             if len == 0 {
                 break;
             }
-            buf.truncate(len);
-            sink.send(buf).await?;
+            sink.send(buf.freeze()).await?;
         }
         anyhow::Ok(())
     };

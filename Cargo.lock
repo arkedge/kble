@@ -710,6 +710,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
+ "bytes",
  "clap",
  "futures",
  "kble-socket",
@@ -726,6 +727,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
+ "bytes",
  "futures-util",
  "pin-project-lite",
  "tokio",
