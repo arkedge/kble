@@ -3,7 +3,7 @@ members = [
   "kble",
   "kble-serialport",
   "kble-socket",
-  "kble-tfsync",
+  "kble-c2a",
 ]
 
 [workspace.dependencies]

@@ -705,6 +705,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "kble-c2a"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "clap",
+ "futures",
+ "kble-socket",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "kble-serialport"
 version = "0.1.0"
 dependencies = [
@@ -732,20 +747,6 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-tungstenite",
-]
-
-[[package]]
-name = "kble-tfsync"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytes",
- "futures",
- "kble-socket",
- "tokio",
- "tokio-util",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
