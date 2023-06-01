@@ -1,3 +1,0 @@
-# for local testing
-[patch.crates-io]
-kble-socket = { path = "../kble-socket" }

@@ -9,12 +9,12 @@ repository = "https://github.com/arkedge/kble"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1"
-futures-util = { version = "0.3", features = ["sink"] }
-pin-project-lite = { version = "0.2", optional = true }
-tokio = "1"
-tokio-tungstenite = { version = "0.18", optional = true }
-axum = { version = "0.6", optional = true, default-features = false }
+anyhow = { workspace = true }
+futures-util = { workspace = true }
+pin-project-lite = { workspace = true, optional = true }
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true, optional = true }
+axum = { workspace = true }
 
 [features]
 stdio = ["tokio/io-std", "dep:pin-project-lite"]

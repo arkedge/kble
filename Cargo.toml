@@ -1,0 +1,16 @@
+[workspace]
+members = [
+  "kble",
+  "kble-serialport",
+  "kble-socket",
+  "kble-tfsync",
+]
+
+[workspace.dependencies]
+anyhow = "1"
+futures = "0.3"
+futures-util = { version = "0.3", features = ["sink"] }
+pin-project-lite = { version = "0.2" }
+tokio = "1"
+tokio-tungstenite = { version = "0.18" }
+axum = { version = "0.6", default-features = false }

@@ -9,13 +9,13 @@ repository = "https://github.com/arkedge/kble"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1"
-futures = "0.3"
+anyhow = { workspace = true }
+futures = { workspace = true }
 pin-project = "1"
-tokio = { version = "1", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
 async-trait = "0.1"
 url = { version = "2", features = ["serde"] }
-tokio-tungstenite = "0.18"
+tokio-tungstenite = { workspace = true }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"]}
 serde_yaml = "0.9"
