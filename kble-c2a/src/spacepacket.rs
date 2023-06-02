@@ -21,10 +21,10 @@ const AOS_TF_PH_VN_SCID_VCID: [u8; 2] = [0x40, 0x00];
 #[allow(clippy::unusual_byte_groupings)]
 const IDLE_PACKET_PH_EXCEPT_LEN: [u8; 4] = [
     // Version = 0b000
-    // Type = 0b1 (telemetry)
+    // Type = 0b0 (telemetry)
     // SH Flag = 0b0
     // APID = 0b111_1111_1111
-    0b000_1_0_111,
+    0b000_0_0_111,
     0b1111_1111,
     // Seq Flag = 0b11
     // Seq Count = 0
