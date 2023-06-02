@@ -36,7 +36,10 @@ const AOS_TF_CLCW: [u8; 4] = [0x00, 0x00, 0x00, 0x00];
 const AOS_TF_MAX_PACKET_SIZE: usize = AOS_TF_SIZE - 12;
 pub fn to_aos_tf(frame_count: &mut u32, spacepacket: Bytes) -> Result<BytesMut> {
     if spacepacket.len() > AOS_TF_MAX_PACKET_SIZE {
-        return Err(anyhow!("Space Packet is too large: {} bytes", spacepacket.len()));
+        return Err(anyhow!(
+            "Space Packet is too large: {} bytes",
+            spacepacket.len()
+        ));
     }
 
     let mut aos_tf = BytesMut::with_capacity(AOS_TF_SIZE);

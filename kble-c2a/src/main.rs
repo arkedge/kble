@@ -2,7 +2,7 @@ use anyhow::Result;
 use bytes::BytesMut;
 use clap::{Parser, Subcommand};
 use futures::{SinkExt, StreamExt};
-use kble_c2a::{tfsync, spacepacket};
+use kble_c2a::{spacepacket, tfsync};
 use tokio_util::codec::Decoder;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
