@@ -1,4 +1,13 @@
+[workspace.package]
+version = "0.1.0"
+repository = "https://github.com/arkedge/kble"
+license = "MIT"
+edition = "2021"
+readme = "README.md"
+
 [workspace]
+resolver = "2"
+
 members = [
   "kble",
   "kble-serialport",
@@ -12,7 +21,13 @@ anyhow = "1"
 futures = "0.3"
 futures-util = { version = "0.3", features = ["sink"] }
 pin-project-lite = { version = "0.2" }
+bytes = "1.4.0"
 tokio = "1"
+tokio-util = { version = "0.7", features = ["codec"] }
 tokio-tungstenite = { version = "0.18" }
 axum = { version = "0.6", default-features = false }
-bytes = "1.4.0"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"]}
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+kble-socket = "0.1.0"

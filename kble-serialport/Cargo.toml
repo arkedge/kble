@@ -1,22 +1,23 @@
 [package]
 name = "kble-serialport"
-version = "0.1.0"
-edition = "2021"
-license = "MIT"
 description = "Virtual Harness Toolkit"
-repository = "https://github.com/arkedge/kble"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { workspace = true }
-clap = { version = "4", features = ["derive", "env"] }
-futures = { workspace = true }
+anyhow.workspace = true
+clap = { workspace = true, features = ["derive", "env"] }
+futures.workspace = true
 tokio = { workspace = true, features = ["full"] }
-kble-socket = { version = "0.1.0", features = ["axum"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+kble-socket = { workspace = true, features = ["axum"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
 axum = { workspace = true, default-features = false, features = ["tokio", "tower-log", "http1", "ws", "query"] }
 tokio-serial = "5.4"
-serde = { version = "1", features = ["derive"] }
-bytes = { workspace = true }
+serde.workspace = true
+bytes.workspace = true

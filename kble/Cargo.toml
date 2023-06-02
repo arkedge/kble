@@ -1,22 +1,23 @@
 [package]
 name = "kble"
-version = "0.1.0"
-edition = "2021"
-license = "MIT"
 description = "Virtual Harness Toolkit"
-repository = "https://github.com/arkedge/kble"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { workspace = true }
-futures = { workspace = true }
+anyhow.workspace = true
+futures.workspace = true
 pin-project = "1"
 tokio = { workspace = true, features = ["full"] }
 async-trait = "0.1"
 url = { version = "2", features = ["serde"] }
-tokio-tungstenite = { workspace = true }
-clap = { version = "4", features = ["derive"] }
-serde = { version = "1", features = ["derive"]}
+tokio-tungstenite.workspace = true
+clap.workspace = true
+serde.workspace = true
 serde_yaml = "0.9"
 serde_with = "3.0"
