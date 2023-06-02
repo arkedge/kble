@@ -12,10 +12,10 @@ repository = "https://github.com/arkedge/kble"
 anyhow.workspace = true
 futures.workspace = true
 tokio = { workspace = true, features = ["full"] }
-kble-socket = { version = "0.1.0", features = ["stdio", "tungstenite"] }
-tokio-util = { version = "0.7", features = ["codec"] }
+kble-socket = { workspace = true, features = ["stdio", "tungstenite"] }
+tokio-util.workspace = true
 bytes.workspace = true
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-clap = { version = "4", features = ["derive"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true
 eb90 = "0.1.1"
