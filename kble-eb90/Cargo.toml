@@ -1,0 +1,21 @@
+[package]
+name = "kble-eb90"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Virtual Harness Toolkit"
+repository = "https://github.com/arkedge/kble"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow.workspace = true
+futures.workspace = true
+tokio = { workspace = true, features = ["full"] }
+kble-socket = { version = "0.1.0", features = ["stdio", "tungstenite"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+bytes.workspace = true
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive"] }
+eb90 = "0.1.1"
