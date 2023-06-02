@@ -776,7 +776,7 @@ dependencies = [
  "bytes",
  "clap",
  "futures",
- "kble-socket",
+ "kble-socket 0.2.0",
  "tokio",
  "tokio-util",
  "tracing",
@@ -792,7 +792,7 @@ dependencies = [
  "clap",
  "eb90",
  "futures",
- "kble-socket",
+ "kble-socket 0.2.0",
  "tokio",
  "tokio-util",
  "tracing",
@@ -808,7 +808,7 @@ dependencies = [
  "bytes",
  "clap",
  "futures",
- "kble-socket",
+ "kble-socket 0.2.0",
  "serde",
  "tokio",
  "tokio-serial",
@@ -819,6 +819,21 @@ dependencies = [
 [[package]]
 name = "kble-socket"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bytes",
+ "futures-util",
+ "pin-project-lite",
+ "tokio",
+ "tokio-tungstenite",
+]
+
+[[package]]
+name = "kble-socket"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9610dc8c2368c5ead741d084e97872a902107f3566bf852506e2fa7a67186aaa"
 dependencies = [
  "anyhow",
  "axum",
