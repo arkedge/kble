@@ -3,6 +3,7 @@ version = "0.1.0"
 repository = "https://github.com/arkedge/kble"
 license = "MIT"
 edition = "2021"
+readme = "README.md"
 
 [workspace]
 resolver = "2"
