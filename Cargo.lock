@@ -753,7 +753,7 @@ dependencies = [
 
 [[package]]
 name = "kble"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -770,7 +770,7 @@ dependencies = [
 
 [[package]]
 name = "kble-c2a"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -785,7 +785,7 @@ dependencies = [
 
 [[package]]
 name = "kble-eb90"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -801,7 +801,7 @@ dependencies = [
 
 [[package]]
 name = "kble-serialport"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -818,7 +818,7 @@ dependencies = [
 
 [[package]]
 name = "kble-socket"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
