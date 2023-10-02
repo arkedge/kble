@@ -12,11 +12,14 @@ use bytes::BytesMut;
 use clap::Parser;
 use futures::{SinkExt, StreamExt};
 use kble_socket::from_axum;
+use license::ParseWithLicenseExt;
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_serial::{DataBits, FlowControl, Parity, SerialPortBuilderExt, SerialStream, StopBits};
 use tracing::error;
 use tracing_subscriber::{prelude::*, EnvFilter};
+
+mod license;
 
 #[derive(Debug, Deserialize)]
 #[serde(remote = "DataBits")]
@@ -100,7 +103,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
+    let args = Args::parse_with_license();
 
     tracing_subscriber::registry()
         .with(
