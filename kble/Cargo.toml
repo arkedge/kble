@@ -20,4 +20,4 @@ tokio-tungstenite.workspace = true
 clap.workspace = true
 serde.workspace = true
 serde_yaml = "0.9"
-serde_with = "3.3"
+serde_with = "3.4"
