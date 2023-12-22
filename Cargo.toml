@@ -21,7 +21,7 @@ anyhow = "1"
 futures = "0.3"
 futures-util = { version = "0.3", features = ["sink"] }
 pin-project-lite = { version = "0.2" }
-bytes = "1.4.0"
+bytes = "1.5.0"
 tokio = "1"
 tokio-util = { version = "0.7", features = ["codec"] }
 tokio-tungstenite = { version = "0.18" }
