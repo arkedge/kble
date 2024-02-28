@@ -3,6 +3,7 @@ use bytes::BytesMut;
 use clap::{Parser, Subcommand};
 use futures::{SinkExt, StreamExt};
 use kble_c2a::{spacepacket, tfsync};
+use notalawyer_clap::*;
 use tokio_util::codec::Decoder;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
@@ -43,7 +44,7 @@ async fn main() -> Result<()> {
         .with(EnvFilter::from_default_env())
         .init();
 
-    let args = Args::parse();
+    let args = Args::parse_with_license_notice(include_notice!());
     match args.command {
         Commands::Tfsync => run_tfsync().await,
         Commands::Spacepacket { command } => run_spacepacket(command).await,

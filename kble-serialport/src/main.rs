@@ -12,6 +12,7 @@ use bytes::BytesMut;
 use clap::Parser;
 use futures::{SinkExt, StreamExt};
 use kble_socket::from_axum;
+use notalawyer_clap::*;
 use serde::Deserialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_serial::{DataBits, FlowControl, Parity, SerialPortBuilderExt, SerialStream, StopBits};
@@ -100,7 +101,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
+    let args = Args::parse_with_license_notice(include_notice!());
 
     tracing_subscriber::registry()
         .with(

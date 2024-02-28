@@ -33,6 +33,10 @@ jobs:
       - name: cache dependencies
         uses: Swatinem/rust-cache@v2.7.3
 
+      - name: install cargo-about
+        run: |
+          cargo install cargo-about
+
       - name: reviewdog / clippy
         uses: sksat/action-clippy@v0.7.1
         with:

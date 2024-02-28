@@ -782,6 +782,9 @@ dependencies = [
  "async-trait",
  "clap",
  "futures",
+ "notalawyer",
+ "notalawyer-build",
+ "notalawyer-clap",
  "pin-project",
  "serde",
  "serde_with",
@@ -800,6 +803,9 @@ dependencies = [
  "clap",
  "futures",
  "kble-socket",
+ "notalawyer",
+ "notalawyer-build",
+ "notalawyer-clap",
  "tokio",
  "tokio-util",
  "tracing",
@@ -816,6 +822,9 @@ dependencies = [
  "eb90",
  "futures",
  "kble-socket",
+ "notalawyer",
+ "notalawyer-build",
+ "notalawyer-clap",
  "tokio",
  "tokio-util",
  "tracing",
@@ -832,6 +841,9 @@ dependencies = [
  "clap",
  "futures",
  "kble-socket",
+ "notalawyer",
+ "notalawyer-build",
+ "notalawyer-clap",
  "serde",
  "tokio",
  "tokio-serial",
@@ -977,6 +989,28 @@ dependencies = [
  "memoffset",
  "pin-utils",
  "static_assertions",
+]
+
+[[package]]
+name = "notalawyer"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb6f7d5c326e17c81351d91ed10b175ba5afbfc276ca232d115490e876f7e4e7"
+
+[[package]]
+name = "notalawyer-build"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e6e1b1f2c9f35e548539a8216afdfeb0ee62743e99664e6c5b3b0f815a9fdf7"
+
+[[package]]
+name = "notalawyer-clap"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43962175b7e1f02c3fa7458b4970bdd0b78fa81272c2de2ebd1868120e2dac48"
+dependencies = [
+ "clap",
+ "notalawyer",
 ]
 
 [[package]]
