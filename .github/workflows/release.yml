@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - add-release-workflow
-    tags: ['*']
+    tags: ['v*']
 
 jobs:
   build:
