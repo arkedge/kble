@@ -23,6 +23,6 @@ tokio-tungstenite.workspace = true
 clap.workspace = true
 serde.workspace = true
 serde_yaml = "0.9"
-serde_with = "3.4"
+serde_with = "3.6"
 notalawyer.workspace = true
 notalawyer-clap.workspace = true
