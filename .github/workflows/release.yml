@@ -102,6 +102,7 @@ jobs:
           cargo build --target=${{ env.TARGET }} -p kble-serialport --release --locked
 
       - name: Rename binary
+        shell: bash
         run: |
           mkdir bin
           cp "./target/${{ env.TARGET }}/release/kble-serialport.exe" "./bin/kble-serialport-${{ env.TARGET }}.exe"
