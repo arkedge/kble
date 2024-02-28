@@ -9,6 +9,9 @@ readme.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[build-dependencies]
+notalawyer-build.workspace = true
+
 [dependencies]
 anyhow.workspace = true
 futures.workspace = true
@@ -21,3 +24,5 @@ clap.workspace = true
 serde.workspace = true
 serde_yaml = "0.9"
 serde_with = "3.4"
+notalawyer.workspace = true
+notalawyer-clap.workspace = true

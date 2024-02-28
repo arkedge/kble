@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::Parser;
+use notalawyer_clap::*;
 
 mod plug;
 mod spaghetti;
@@ -27,7 +28,7 @@ impl Args {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
+    let args = Args::parse_with_license_notice(include_notice!());
     let config = args.load_spaghetti_config()?;
     config.run().await?;
     Ok(())
