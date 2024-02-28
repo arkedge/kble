@@ -82,6 +82,7 @@ jobs:
       - name: Get Rust toolchain
         id: toolchain
         working-directory: .
+        shell: bash
         run: |
           awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
 
