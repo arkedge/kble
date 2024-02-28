@@ -4,6 +4,7 @@ use anyhow::Result;
 use bytes::BytesMut;
 use clap::{Parser, Subcommand};
 use futures::{SinkExt, StreamExt};
+use notalawyer_clap::*;
 use tokio_util::codec::{Decoder, Encoder};
 use tracing::warn;
 use tracing_subscriber::{prelude::*, EnvFilter};
@@ -35,7 +36,7 @@ async fn main() -> Result<()> {
         .with(EnvFilter::from_default_env())
         .init();
 
-    let args = Args::parse();
+    let args = Args::parse_with_license_notice(include_notice!());
     match args.command {
         Commands::Encode => run_encode().await,
         Commands::Decode { buffer_size } => run_decode(buffer_size).await,

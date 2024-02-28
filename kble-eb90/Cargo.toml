@@ -9,6 +9,9 @@ readme.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[build-dependencies]
+notalawyer-build.workspace = true
+
 [dependencies]
 anyhow.workspace = true
 futures.workspace = true
@@ -20,3 +23,5 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 clap.workspace = true
 eb90 = "0.1.1"
+notalawyer.workspace = true
+notalawyer-clap.workspace = true
