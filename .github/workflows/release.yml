@@ -104,7 +104,7 @@ jobs:
       - name: Rename binary
         run: |
           mkdir bin
-          cp "./target/${{ env.TARGET }}/release/kble-serialport" "./bin/kble-serialport-${{ env.TARGET }}"
+          cp "./target/${{ env.TARGET }}/release/kble-serialport.exe" "./bin/kble-serialport-${{ env.TARGET }}.exe"
           ls -lh ./bin
 
       - uses: actions/upload-artifact@v4.3.1
