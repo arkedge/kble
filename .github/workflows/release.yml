@@ -53,7 +53,7 @@ jobs:
           done
           ls -lh ./bin
 
-      - uses: actions/upload-artifact@v4.3.1
+      - uses: actions/upload-artifact@v4.3.2
         with:
           name: release-executable-${{ matrix.target }}
           if-no-files-found: error
@@ -107,7 +107,7 @@ jobs:
           cp "./target/${{ env.TARGET }}/release/kble-serialport.exe" "./bin/kble-serialport-${{ env.TARGET }}.exe"
           ls -lh ./bin
 
-      - uses: actions/upload-artifact@v4.3.1
+      - uses: actions/upload-artifact@v4.3.2
         with:
           name: release-executable-${{ env.TARGET }}
           if-no-files-found: error
