@@ -1,5 +1,5 @@
 use crate::{plug, spaghetti::Config};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use futures::future;
 use futures::StreamExt;
 use std::collections::HashMap;
