@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::Parser;
 use notalawyer_clap::*;
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 mod app;
 mod plug;
@@ -33,6 +34,15 @@ impl Args {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_ansi(false)
+                .with_writer(std::io::stderr),
+        )
+        .with(EnvFilter::from_default_env())
+        .init();
+
     let args = Args::parse_with_license_notice(include_notice!());
     let config = args.load_spaghetti_config()?;
     app::run(&config).await?;
