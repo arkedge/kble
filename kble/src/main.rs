@@ -6,6 +6,7 @@ use notalawyer_clap::*;
 
 mod plug;
 mod spaghetti;
+mod app;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -30,6 +31,6 @@ impl Args {
 async fn main() -> Result<()> {
     let args = Args::parse_with_license_notice(include_notice!());
     let config = args.load_spaghetti_config()?;
-    config.run().await?;
+    app::run(&config).await?;
     Ok(())
 }
