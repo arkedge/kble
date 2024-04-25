@@ -18,6 +18,7 @@ struct Connections<'a> {
     // Some: connections not used yet
     // None: connections is used in a link
     map: HashMap<&'a str, Connection>,
+    max_child_wait_secs: u64,
 }
 
 struct Link<'a> {
@@ -27,8 +28,8 @@ struct Link<'a> {
     dest: plug::PlugSink,
 }
 
-pub async fn run(config: &Config) -> Result<()> {
-    let mut conns = connect_to_plugs(config).await?;
+pub async fn run(config: &Config, max_child_wait_secs: u64) -> Result<()> {
+    let mut conns = connect_to_plugs(config, max_child_wait_secs).await?;
     let links = connect_links(&mut conns, config);
 
     let (quit_tx, _) = broadcast::channel(1);
@@ -52,9 +53,10 @@ pub async fn run(config: &Config) -> Result<()> {
 }
 
 impl<'a> Connections<'a> {
-    fn new() -> Self {
+    fn new(max_child_wait_secs: u64) -> Self {
         Self {
             map: HashMap::new(),
+            max_child_wait_secs,
         }
     }
 
@@ -108,7 +110,11 @@ impl<'a> Connections<'a> {
                 debug!("Plug {name} exited");
                 anyhow::Ok(())
             };
-            let close_result = tokio::time::timeout(std::time::Duration::from_secs(10), fut).await;
+            let close_result = tokio::time::timeout(
+                std::time::Duration::from_secs(self.max_child_wait_secs),
+                fut,
+            )
+            .await;
 
             match close_result {
                 Ok(result) => result,
@@ -132,8 +138,8 @@ impl<'a> Connections<'a> {
     }
 }
 
-async fn connect_to_plugs(config: &Config) -> Result<Connections> {
-    let mut conns = Connections::new();
+async fn connect_to_plugs(config: &Config, max_child_wait_secs: u64) -> Result<Connections> {
+    let mut conns = Connections::new(max_child_wait_secs);
     for (name, url) in config.plugs().iter() {
         debug!("Connecting to {name}");
         let connect_result = plug::connect(url).await.with_context(move || {
