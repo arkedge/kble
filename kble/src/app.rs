@@ -18,7 +18,7 @@ struct Connections<'a> {
     // Some: connections not used yet
     // None: connections is used in a link
     map: HashMap<&'a str, Connection>,
-    max_child_wait_secs: u64,
+    termination_grace_period_secs: u64,
 }
 
 struct Link<'a> {
@@ -28,8 +28,8 @@ struct Link<'a> {
     dest: plug::PlugSink,
 }
 
-pub async fn run(config: &Config, max_child_wait_secs: u64) -> Result<()> {
-    let mut conns = connect_to_plugs(config, max_child_wait_secs).await?;
+pub async fn run(config: &Config, termination_grace_period_secs: u64) -> Result<()> {
+    let mut conns = connect_to_plugs(config, termination_grace_period_secs).await?;
     let links = connect_links(&mut conns, config);
 
     let (quit_tx, _) = broadcast::channel(1);
@@ -53,10 +53,10 @@ pub async fn run(config: &Config, max_child_wait_secs: u64) -> Result<()> {
 }
 
 impl<'a> Connections<'a> {
-    fn new(max_child_wait_secs: u64) -> Self {
+    fn new(termination_grace_period_secs: u64) -> Self {
         Self {
             map: HashMap::new(),
-            max_child_wait_secs,
+            termination_grace_period_secs,
         }
     }
 
@@ -98,7 +98,7 @@ impl<'a> Connections<'a> {
     // close all connections
     // assume all links are returned
     async fn close_and_wait(self) -> Result<()> {
-        let futs = self.map.into_iter().map(|(name, conn)| async move {
+        let futs = self.map.into_iter().map(|(name, mut conn)| async move {
             let fut = async {
                 if let Some(mut s) = conn.sink {
                     debug!("Closing {name}");
@@ -111,7 +111,7 @@ impl<'a> Connections<'a> {
                 anyhow::Ok(())
             };
             let close_result = tokio::time::timeout(
-                std::time::Duration::from_secs(self.max_child_wait_secs),
+                std::time::Duration::from_secs(self.termination_grace_period_secs),
                 fut,
             )
             .await;
@@ -121,6 +121,7 @@ impl<'a> Connections<'a> {
                 Err(_) => {
                     // abandon the connection
                     warn!("Plug {name} didn't exit in time");
+                    conn.backend.kill().await?;
                     Ok(())
                 }
             }
@@ -138,8 +139,11 @@ impl<'a> Connections<'a> {
     }
 }
 
-async fn connect_to_plugs(config: &Config, max_child_wait_secs: u64) -> Result<Connections> {
-    let mut conns = Connections::new(max_child_wait_secs);
+async fn connect_to_plugs(
+    config: &Config,
+    termination_grace_period_secs: u64,
+) -> Result<Connections> {
+    let mut conns = Connections::new(termination_grace_period_secs);
     for (name, url) in config.plugs().iter() {
         debug!("Connecting to {name}");
         let connect_result = plug::connect(url).await.with_context(move || {

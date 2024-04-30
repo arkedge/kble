@@ -17,9 +17,10 @@ struct Args {
     #[clap(long, short)]
     spaghetti: PathBuf,
 
-    /// Maximum time to wait for a child process to exit after a closing handshake
+    /// Period to wait for each child process to exit after a closing handshake
+    /// before killing it
     #[clap(long, default_value_t = 10)]
-    max_child_wait_secs: u64,
+    termination_grace_period_secs: u64,
 }
 
 impl Args {
@@ -49,6 +50,6 @@ async fn main() -> Result<()> {
 
     let args = Args::parse_with_license_notice(include_notice!());
     let config = args.load_spaghetti_config()?;
-    app::run(&config, args.max_child_wait_secs).await?;
+    app::run(&config, args.termination_grace_period_secs).await?;
     Ok(())
 }

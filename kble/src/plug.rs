@@ -22,15 +22,22 @@ pub enum Backend {
 }
 
 impl Backend {
-    pub async fn wait(self) -> Result<()> {
+    pub async fn wait(&mut self) -> Result<()> {
         match self {
             Backend::WebSocketClient => Ok(()),
-            Backend::StdioProcess(mut proc) => {
+            Backend::StdioProcess(proc) => {
                 proc.wait()
                     .await
                     .with_context(|| format!("Failed to wait for {:?}", proc))?;
                 Ok(())
             }
+        }
+    }
+
+    pub async fn kill(self) -> Result<()> {
+        match self {
+            Backend::WebSocketClient => Ok(()),
+            Backend::StdioProcess(mut proc) => proc.kill().await.map_err(Into::into),
         }
     }
 }
