@@ -17,7 +17,7 @@ members = [
 ]
 
 [workspace.dependencies]
-anyhow = "1"
+anyhow = "1.0.82"
 futures = "0.3"
 futures-util = { version = "0.3", features = ["sink"] }
 pin-project-lite = { version = "0.2" }
