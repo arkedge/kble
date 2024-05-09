@@ -8,10 +8,17 @@ use std::collections::HashMap;
 use tokio::sync::broadcast;
 use tracing::{debug, warn};
 
+struct Connection {
+    backend: plug::Backend,
+    stream: Option<plug::PlugStream>,
+    sink: Option<plug::PlugSink>,
+}
+
 struct Connections<'a> {
     // Some: connections not used yet
     // None: connections is used in a link
-    map: HashMap<&'a str, (Option<plug::PlugStream>, Option<plug::PlugSink>)>,
+    map: HashMap<&'a str, Connection>,
+    termination_grace_period_secs: u64,
 }
 
 struct Link<'a> {
@@ -21,8 +28,8 @@ struct Link<'a> {
     dest: plug::PlugSink,
 }
 
-pub async fn run(config: &Config) -> Result<()> {
-    let mut conns = connect_to_plugs(config).await?;
+pub async fn run(config: &Config, termination_grace_period_secs: u64) -> Result<()> {
+    let mut conns = connect_to_plugs(config, termination_grace_period_secs).await?;
     let links = connect_links(&mut conns, config);
 
     let (quit_tx, _) = broadcast::channel(1);
@@ -37,48 +44,106 @@ pub async fn run(config: &Config) -> Result<()> {
     let links = future::join_all(link_futs).await;
     let links = links.into_iter().chain(std::iter::once(terminated_link));
 
-    let link_close_futs = future::try_join_all(links.map(|link| link.close()));
-    future::try_join(conns.close_all(), link_close_futs).await?;
+    for link in links {
+        conns.return_link(link);
+    }
+    conns.close_and_wait().await?;
 
     Ok(())
 }
 
 impl<'a> Connections<'a> {
-    fn new() -> Self {
+    fn new(termination_grace_period_secs: u64) -> Self {
         Self {
             map: HashMap::new(),
+            termination_grace_period_secs,
         }
     }
 
-    fn insert(&mut self, name: &'a str, stream: plug::PlugStream, sink: plug::PlugSink) {
-        self.map.insert(name, (Some(stream), Some(sink)));
+    fn insert(
+        &mut self,
+        name: &'a str,
+        backend: plug::Backend,
+        stream: plug::PlugStream,
+        sink: plug::PlugSink,
+    ) {
+        self.map.insert(
+            name,
+            Connection {
+                backend,
+                stream: Some(stream),
+                sink: Some(sink),
+            },
+        );
     }
 
-    // close all connections whose sink is not used in a link
-    async fn close_all(self) -> Result<()> {
-        let futs = self.map.into_iter().map(|(name, (_, sink))| async move {
-            if let Some(mut s) = sink {
-                debug!("Closing {name}");
-                s.close().await?;
-                debug!("Closed {name}");
+    fn return_link(&mut self, link: Link<'a>) {
+        let conn = self.map.get_mut(link.source_name).unwrap_or_else(|| {
+            panic!(
+                "tried to return a invalid link with source name {}",
+                link.source_name,
+            )
+        });
+        conn.stream = Some(link.source);
+
+        let conn = self.map.get_mut(link.dest_name).unwrap_or_else(|| {
+            panic!(
+                "tried to return a invalid link with dest name {}",
+                link.dest_name,
+            )
+        });
+        conn.sink = Some(link.dest);
+    }
+
+    // close all connections
+    // assume all links are returned
+    async fn close_and_wait(self) -> Result<()> {
+        let futs = self.map.into_iter().map(|(name, mut conn)| async move {
+            let fut = async {
+                if let Some(mut s) = conn.sink {
+                    debug!("Closing {name}");
+                    s.close().await?;
+                    debug!("Closed {name}");
+                }
+                debug!("Waiting for plug {name} to exit");
+                conn.backend.wait().await?;
+                debug!("Plug {name} exited");
+                anyhow::Ok(())
+            };
+            let close_result = tokio::time::timeout(
+                std::time::Duration::from_secs(self.termination_grace_period_secs),
+                fut,
+            )
+            .await;
+
+            match close_result {
+                Ok(result) => result,
+                Err(_) => {
+                    // abandon the connection
+                    warn!("Plug {name} didn't exit in time");
+                    conn.backend.kill().await?;
+                    Ok(())
+                }
             }
-            anyhow::Ok(())
         });
         future::try_join_all(futs).await?;
         Ok(())
     }
 
     fn take_stream(&mut self, name: &str) -> Option<plug::PlugStream> {
-        self.map.get_mut(name)?.0.take()
+        self.map.get_mut(name)?.stream.take()
     }
 
     fn take_sink(&mut self, name: &str) -> Option<plug::PlugSink> {
-        self.map.get_mut(name)?.1.take()
+        self.map.get_mut(name)?.sink.take()
     }
 }
 
-async fn connect_to_plugs(config: &Config) -> Result<Connections> {
-    let mut conns = Connections::new();
+async fn connect_to_plugs(
+    config: &Config,
+    termination_grace_period_secs: u64,
+) -> Result<Connections> {
+    let mut conns = Connections::new(termination_grace_period_secs);
     for (name, url) in config.plugs().iter() {
         debug!("Connecting to {name}");
         let connect_result = plug::connect(url).await.with_context(move || {
@@ -87,16 +152,16 @@ async fn connect_to_plugs(config: &Config) -> Result<Connections> {
             }
         });
 
-        let (sink, stream) = match connect_result {
+        let (backend, sink, stream) = match connect_result {
             Ok(p) => p,
             Err(e) => {
                 warn!("Error connecting to {name}: {e}");
-                conns.close_all().await?;
+                conns.close_and_wait().await?;
                 return Err(e);
             }
         };
         debug!("Connected to {name}");
-        conns.insert(name.as_str(), stream, sink);
+        conns.insert(name.as_str(), backend, stream, sink);
     }
     Ok(conns)
 }
@@ -148,12 +213,5 @@ impl<'a> Link<'a> {
             }
         }
         self
-    }
-
-    async fn close(mut self) -> Result<()> {
-        debug!("Closing {}", self.dest_name);
-        self.dest.close().await?;
-        debug!("Closed {}", self.dest_name);
-        Ok(())
     }
 }

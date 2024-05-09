@@ -5,7 +5,7 @@ use futures::{future, stream, Sink, SinkExt, Stream, StreamExt, TryStreamExt};
 use pin_project::pin_project;
 use tokio::{
     io::{AsyncRead, AsyncWrite},
-    process::{ChildStdin, ChildStdout},
+    process::{Child, ChildStdin, ChildStdout},
 };
 use tokio_tungstenite::{
     tungstenite::{protocol::Role, Message},
@@ -16,7 +16,33 @@ use url::Url;
 pub type PlugSink = Pin<Box<dyn Sink<Vec<u8>, Error = anyhow::Error> + Send + 'static>>;
 pub type PlugStream = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send + 'static>>;
 
-pub async fn connect(url: &Url) -> Result<(PlugSink, PlugStream)> {
+pub enum Backend {
+    WebSocketClient,
+    StdioProcess(Child),
+}
+
+impl Backend {
+    pub async fn wait(&mut self) -> Result<()> {
+        match self {
+            Backend::WebSocketClient => Ok(()),
+            Backend::StdioProcess(proc) => {
+                proc.wait()
+                    .await
+                    .with_context(|| format!("Failed to wait for {:?}", proc))?;
+                Ok(())
+            }
+        }
+    }
+
+    pub async fn kill(self) -> Result<()> {
+        match self {
+            Backend::WebSocketClient => Ok(()),
+            Backend::StdioProcess(mut proc) => proc.kill().await.map_err(Into::into),
+        }
+    }
+}
+
+pub async fn connect(url: &Url) -> Result<(Backend, PlugSink, PlugStream)> {
     match url.scheme() {
         "exec" => connect_exec(url).await,
         "ws" | "wss" => connect_ws(url).await,
@@ -24,7 +50,7 @@ pub async fn connect(url: &Url) -> Result<(PlugSink, PlugStream)> {
     }
 }
 
-async fn connect_exec(url: &Url) -> Result<(PlugSink, PlugStream)> {
+async fn connect_exec(url: &Url) -> Result<(Backend, PlugSink, PlugStream)> {
     assert_eq!(url.scheme(), "exec");
     ensure!(url.username().is_empty());
     ensure!(url.password().is_none());
@@ -32,18 +58,19 @@ async fn connect_exec(url: &Url) -> Result<(PlugSink, PlugStream)> {
     ensure!(url.port().is_none());
     ensure!(url.query().is_none());
     ensure!(url.fragment().is_none());
-    let proc = tokio::process::Command::new("sh")
+    let mut proc = tokio::process::Command::new("sh")
         .args(["-c", url.path()])
         .stderr(Stdio::inherit())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
         .with_context(|| format!("Failed to spawn {}", url))?;
-    let stdin = proc.stdin.unwrap();
-    let stdout = proc.stdout.unwrap();
+    let stdin = proc.stdin.take().unwrap();
+    let stdout = proc.stdout.take().unwrap();
     let stdio = ChildStdio { stdin, stdout };
     let wss = WebSocketStream::from_raw_socket(stdio, Role::Client, None).await;
-    Ok(wss_to_pair(wss))
+    let (stream, sink) = wss_to_pair(wss);
+    Ok((Backend::StdioProcess(proc), stream, sink))
 }
 
 #[pin_project]
@@ -89,11 +116,12 @@ impl AsyncRead for ChildStdio {
     }
 }
 
-async fn connect_ws(url: &Url) -> Result<(PlugSink, PlugStream)> {
+async fn connect_ws(url: &Url) -> Result<(Backend, PlugSink, PlugStream)> {
     let (wss, _resp) = tokio_tungstenite::connect_async(url)
         .await
         .with_context(|| format!("Failed to connect to {}", url))?;
-    Ok(wss_to_pair(wss))
+    let (stream, sink) = wss_to_pair(wss);
+    Ok((Backend::WebSocketClient, stream, sink))
 }
 
 fn wss_to_pair<S>(wss: WebSocketStream<S>) -> (PlugSink, PlugStream)
