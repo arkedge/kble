@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use futures::{future, SinkExt, StreamExt};
 use std::collections::HashMap;
 use tokio::sync::broadcast;
-use tracing::{debug, warn};
+use tracing::{debug, trace, warn};
 
 struct Connection {
     backend: plug::Backend,
@@ -207,10 +207,17 @@ impl<'a> Link<'a> {
                 Ok(data) => data,
             };
 
+            let data_len = data.len();
             if let Err(e) = self.dest.send(data).await {
                 warn!("Error writing to {}: {}", self.dest_name, e);
                 break;
             }
+            trace!(
+                "{} -> {}: {} bytes",
+                self.source_name,
+                self.dest_name,
+                data_len
+            );
         }
         self
     }
