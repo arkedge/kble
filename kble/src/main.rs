@@ -47,6 +47,7 @@ async fn main() -> Result<()> {
         )
         .with(EnvFilter::from_default_env())
         .init();
+    tracing::info!("Starting");
 
     let args = Args::parse_with_license_notice(include_notice!());
     let config = args.load_spaghetti_config()?;
