@@ -21,6 +21,9 @@ struct Args {
     /// before killing it
     #[clap(long, default_value_t = 10)]
     termination_grace_period_secs: u64,
+
+    #[clap(long)]
+    dump: bool,
 }
 
 impl Args {
@@ -51,6 +54,6 @@ async fn main() -> Result<()> {
 
     let args = Args::parse_with_license_notice(include_notice!());
     let config = args.load_spaghetti_config()?;
-    app::run(&config, args.termination_grace_period_secs).await?;
+    app::run(&config, args.termination_grace_period_secs, args.dump).await?;
     Ok(())
 }

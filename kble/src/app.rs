@@ -5,6 +5,7 @@ use crate::{
 use anyhow::{Context, Result};
 use futures::{future, SinkExt, StreamExt};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use tokio::sync::broadcast;
 use tracing::{debug, trace, warn};
 
@@ -28,14 +29,23 @@ struct Link<'a> {
     dest: plug::PlugSink,
 }
 
-pub async fn run(config: &Config, termination_grace_period_secs: u64) -> Result<()> {
+pub async fn run(config: &Config, termination_grace_period_secs: u64, dump: bool) -> Result<()> {
     let mut conns = connect_to_plugs(config, termination_grace_period_secs).await?;
     let links = connect_links(&mut conns, config);
+
+    let dump_path = if dump {
+        let dump_path = PathBuf::from("kble_dump").join(chrono::Utc::now().to_rfc3339());
+        tracing::info!("Dumping data to {}", dump_path.display());
+        tokio::fs::create_dir_all(&dump_path).await?;
+        Some(dump_path)
+    } else {
+        None
+    };
 
     let (quit_tx, _) = broadcast::channel(1);
     let link_futs = links.map(|link| {
         let quit_rx = quit_tx.subscribe();
-        let fut = link.forward(quit_rx);
+        let fut = link.forward(quit_rx, dump_path.as_ref());
         Box::pin(fut)
     });
 
@@ -188,8 +198,64 @@ fn connect_links<'a, 'conns>(
     })
 }
 
+struct DumpRecorder {
+    inner: tokio::fs::File,
+}
+
+use serde::Serialize;
+#[derive(Serialize)]
+struct DumpRecord {
+    timestamp: chrono::DateTime<chrono::Utc>,
+    data: Vec<u8>,
+}
+
+impl DumpRecorder {
+    async fn create_from_path(path: PathBuf) -> Result<Self> {
+        let file = tokio::fs::File::create(path).await?;
+        Ok(Self { inner: file })
+    }
+
+    async fn write(&mut self, data: &[u8]) -> Result<()> {
+        use miniz_oxide::deflate::compress_to_vec;
+        use tokio::io::AsyncWriteExt;
+        let compressed = compress_to_vec(data, 6);
+        trace!(
+            "Dumping {} bytes raw, {} bytes compressed",
+            data.len(),
+            compressed.len()
+        );
+        let record = DumpRecord {
+            timestamp: chrono::Utc::now(),
+            data: compressed,
+        };
+        let bin = rmp_serde::encode::to_vec(&record)?;
+        self.inner.write_all(&bin).await?;
+        self.inner.flush().await?;
+        Ok(())
+    }
+}
+
 impl<'a> Link<'a> {
-    async fn forward(mut self, mut quit_rx: broadcast::Receiver<()>) -> Self {
+    async fn forward(
+        mut self,
+        mut quit_rx: broadcast::Receiver<()>,
+        dump_path: Option<&PathBuf>,
+    ) -> Self {
+        let mut recorder = match dump_path {
+            None => None,
+            Some(path) => {
+                let name = format!("{}_{}.dat", self.source_name, self.dest_name);
+                let recorder = DumpRecorder::create_from_path(path.join(name)).await;
+                match recorder {
+                    Ok(r) => Some(r),
+                    Err(e) => {
+                        warn!("Error creating dump recorder: {}", e);
+                        None
+                    }
+                }
+            }
+        };
+
         loop {
             let recv_result = tokio::select! {
                 _ = quit_rx.recv() => break,
@@ -207,6 +273,13 @@ impl<'a> Link<'a> {
                 Ok(data) => data,
             };
 
+            if let Some(recorder) = &mut recorder {
+                if let Err(e) = recorder.write(&data).await {
+                    warn!("Error writing to dump recorder: {}", e);
+                    break;
+                }
+            }
+
             let data_len = data.len();
             if let Err(e) = self.dest.send(data).await {
                 warn!("Error writing to {}: {}", self.dest_name, e);
@@ -219,6 +292,14 @@ impl<'a> Link<'a> {
                 data_len
             );
         }
+        if let Some(mut recorder) = recorder {
+            use tokio::io::AsyncWriteExt;
+            let x = recorder.inner.shutdown().await;
+            if let Err(e) = x {
+                warn!("Error closing dump recorder: {}", e);
+            }
+        }
+
         self
     }
 }
