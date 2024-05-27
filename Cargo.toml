@@ -13,7 +13,7 @@ members = [
   "kble-serialport",
   "kble-socket",
   "kble-c2a",
-  "kble-eb90",
+  "kble-eb90", "kble-tcp",
 ]
 
 [workspace.dependencies]

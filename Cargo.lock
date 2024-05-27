@@ -846,6 +846,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kble-tcp"
+version = "0.3.0"
+dependencies = [
+ "clap",
+ "futures-util",
+ "notalawyer",
+ "notalawyer-build",
+ "notalawyer-clap",
+ "tokio",
+ "tokio-tungstenite",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
