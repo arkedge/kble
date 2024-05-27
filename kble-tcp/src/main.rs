@@ -10,7 +10,7 @@ use tracing_subscriber::{prelude::*, EnvFilter};
 #[derive(Debug, Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    addr: SocketAddr
+    addr: SocketAddr,
 }
 
 #[tokio::main]
