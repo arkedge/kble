@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 use anyhow::Result;
 use clap::Parser;
 use futures::{SinkExt, StreamExt};
@@ -8,8 +10,7 @@ use tracing_subscriber::{prelude::*, EnvFilter};
 #[derive(Debug, Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    host: String,
-    port: String,
+    addr: SocketAddr
 }
 
 #[tokio::main]
@@ -23,9 +24,8 @@ async fn main() -> Result<()> {
         .with(EnvFilter::from_default_env())
         .init();
     let args = Args::parse();
-    let addr = format!("{}:{}", args.host, args.port);
 
-    let tcp_stream = TcpStream::connect(addr).await?;
+    let tcp_stream = TcpStream::connect(args.addr).await?;
     let (mut tcp_upstream, mut tcp_downstream) = tokio::io::split(tcp_stream);
     let (mut tx, mut rx) = kble_socket::from_stdio().await;
     let to_tcp = async {
