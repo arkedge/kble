@@ -852,7 +852,6 @@ dependencies = [
  "anyhow",
  "bytes",
  "clap",
- "eb90",
  "futures",
  "kble-socket",
  "notalawyer",

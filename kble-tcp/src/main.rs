@@ -1,13 +1,29 @@
 use anyhow::Result;
 use futures::{SinkExt, StreamExt};
-use std::env::args;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use clap::Parser;
+use tracing_subscriber::{prelude::*, EnvFilter};
+
+#[derive(Debug, Parser)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    host: String,
+    port: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args: Vec<String> = args().collect();
-    let addr = format!("{}:{}", args.get(1).unwrap(), args.get(2).unwrap());
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_ansi(false)
+                .with_writer(std::io::stderr),
+        )
+        .with(EnvFilter::from_default_env())
+        .init();
+    let args = Args::parse();
+    let addr = format!("{}:{}", args.host, args.port);
 
     let tcp_stream = TcpStream::connect(addr).await?;
     let (mut tcp_upstream, mut tcp_downstream) = tokio::io::split(tcp_stream);
@@ -22,14 +38,10 @@ async fn main() -> Result<()> {
     let from_tcp = async {
         let mut buffer = [0; 8192];
         loop {
-            match tcp_upstream.read(&mut buffer).await {
-                Ok(0) => break,
-                Ok(n) => {
+            match tcp_upstream.read(&mut buffer).await? {
+                0 => break,
+                n => {
                     tx.send(buffer[..n].to_vec().into()).await?;
-                }
-                Err(e) => {
-                    eprintln!("failed to read from socket; error = {:?}", e);
-                    break;
                 }
             }
         }
