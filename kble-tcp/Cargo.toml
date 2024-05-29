@@ -1,0 +1,25 @@
+[package]
+name = "kble-tcp"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+readme.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+notalawyer-build.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+futures.workspace = true
+tokio = { workspace = true, features = ["full"] }
+kble-socket = { workspace = true, features = ["stdio", "tungstenite"] }
+tokio-util.workspace = true
+bytes.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true
+notalawyer.workspace = true
+notalawyer-clap.workspace = true
