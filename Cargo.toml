@@ -14,6 +14,7 @@ members = [
   "kble-socket",
   "kble-c2a",
   "kble-eb90",
+  "kble-dump",
 ]
 
 [workspace.dependencies]
