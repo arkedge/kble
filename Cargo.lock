@@ -794,6 +794,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "kble-dump"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "chrono",
+ "clap",
+ "futures",
+ "kble-socket",
+ "miniz_oxide",
+ "notalawyer",
+ "notalawyer-build",
+ "notalawyer-clap",
+ "rmp-serde",
+ "serde",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "kble-eb90"
 version = "0.3.0"
 dependencies = [
