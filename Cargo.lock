@@ -843,6 +843,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "kble-lossy"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "futures",
+ "kble-socket",
+ "notalawyer",
+ "notalawyer-build",
+ "notalawyer-clap",
+ "rand",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "kble-serialport"
 version = "0.3.0"
 dependencies = [

@@ -16,6 +16,7 @@ members = [
   "kble-eb90",
   "kble-tcp",
   "kble-dump",
+  "kble-lossy",
 ]
 
 [workspace.dependencies]
