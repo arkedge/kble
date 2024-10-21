@@ -227,9 +227,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "bytes"
-version = "1.5.0"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
+checksum = "9ac0150caa2ae65ca5bd83f25c7de183dea78d4d366469f148435e2acfbad0da"
 
 [[package]]
 name = "cc"
@@ -794,28 +794,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kble-dump"
-version = "0.3.0"
-dependencies = [
- "anyhow",
- "bytes",
- "chrono",
- "clap",
- "futures",
- "kble-socket",
- "miniz_oxide",
- "notalawyer",
- "notalawyer-build",
- "notalawyer-clap",
- "rmp-serde",
- "serde",
- "tokio",
- "tokio-util",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "kble-eb90"
 version = "0.3.0"
 dependencies = [
@@ -865,24 +843,6 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-tungstenite",
-]
-
-[[package]]
-name = "kble-tcp"
-version = "0.3.0"
-dependencies = [
- "anyhow",
- "bytes",
- "clap",
- "futures",
- "kble-socket",
- "notalawyer",
- "notalawyer-build",
- "notalawyer-clap",
- "tokio",
- "tokio-util",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
