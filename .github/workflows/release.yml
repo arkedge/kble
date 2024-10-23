@@ -16,7 +16,7 @@ jobs:
           - x86_64-unknown-linux-musl
 
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.2.2
 
       - name: install apt depenedencies
         run: |
@@ -76,7 +76,7 @@ jobs:
       TARGET: x86_64-pc-windows-msvc
 
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.2.2
 
       - name: Get Rust toolchain
         id: toolchain
