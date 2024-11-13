@@ -34,7 +34,7 @@ jobs:
           toolchain: ${{ steps.toolchain.outputs.toolchain }}
           targets: ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@v2.7.3
+      - uses: Swatinem/rust-cache@v2.7.5
 
       - name: install cargo-about
         run: |
@@ -90,7 +90,7 @@ jobs:
           toolchain: ${{ steps.toolchain.outputs.toolchain }}
           targets: ${{ env.TARGET }}
 
-      - uses: Swatinem/rust-cache@v2.7.3
+      - uses: Swatinem/rust-cache@v2.7.5
 
       - name: install cargo-about
         run: |
