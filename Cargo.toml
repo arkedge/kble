@@ -33,6 +33,6 @@ serde = { version = "1", features = ["derive"]}
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 kble-socket = "0.3.0"
-notalawyer = "0.1.0"
-notalawyer-clap = "0.1.0"
-notalawyer-build = "0.1.0"
+notalawyer = "0.2.0"
+notalawyer-clap = "0.2.0"
+notalawyer-build = "0.2.0"
