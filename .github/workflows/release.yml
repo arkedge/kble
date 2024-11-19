@@ -56,7 +56,7 @@ jobs:
       - name: Rename binaries
         run: |
           mkdir bin
-          kble_bins=("kble" "kble-c2a" "kble-eb90" "kble-serialport")
+          kble_bins=("kble" "kble-c2a" "kble-dump" "kble-eb90" "kble-serialport" "kble-tcp")
           for b in "${kble_bins[@]}" ; do
             cp "./target/${{ matrix.target }}/release/${b}" "./bin/${b}-${{ matrix.target }}"
           done
