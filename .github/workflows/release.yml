@@ -23,6 +23,7 @@ jobs:
       matrix:
         target:
           - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-musl
 
     steps:
       - uses: actions/checkout@v4.2.2
