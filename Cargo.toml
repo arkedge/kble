@@ -1,5 +1,6 @@
 [workspace.package]
 version = "0.3.0"
+description = "Virtual Harness Toolkit"
 repository = "https://github.com/arkedge/kble"
 license = "MIT"
 edition = "2021"

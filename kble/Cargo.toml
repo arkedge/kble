@@ -1,6 +1,6 @@
 [package]
 name = "kble"
-description = "Virtual Harness Toolkit"
+description.workspace = true
 version.workspace = true
 edition.workspace = true
 license.workspace = true
