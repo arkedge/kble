@@ -1,5 +1,6 @@
 [package]
 name = "kble-tcp"
+description.workspace = true
 version.workspace = true
 repository.workspace = true
 license.workspace = true
