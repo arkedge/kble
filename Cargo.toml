@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0"
 description = "Virtual Harness Toolkit"
 repository = "https://github.com/arkedge/kble"
 license = "MIT"
@@ -33,7 +33,7 @@ clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"]}
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-kble-socket = "0.3.0"
+kble-socket = "0.4.0"
 notalawyer = "0.2.0"
 notalawyer-clap = "0.2.0"
 notalawyer-build = "0.2.0"
