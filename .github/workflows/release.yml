@@ -128,9 +128,44 @@ jobs:
           if-no-files-found: error
           path: ./bin/
 
+  publish_dry_run:
+    name: publish (dry-run)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Get Rust toolchain
+        id: toolchain
+        working-directory: .
+        run: |
+          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ steps.toolchain.outputs.toolchain }}
+
+      - uses: Swatinem/rust-cache@v2.7.5
+
+      - name: install cargo-about
+        run: |
+          cargo install --locked cargo-about --version ${{ env.CARGO_ABOUT_VERSION }}
+
+      - name: cargo publish (dry-run)
+        run: |
+          crates=("kble" "kble-socket" "kble-c2a" "kble-dump" "kble-eb90" "kble-serialport" "kble-tcp")
+          for c in "${crates[@]}" ; do
+            cargo publish --dry-run -p "${c}"
+
+            echo ""
+            # shellcheck disable=SC2086
+            ls -lh ./target/package/${c}-*/
+          done
+          ls -lh ./target/package
+
   release:
     name: Release
-    needs: [ build, build_kble_serialport_win ]
+    needs: [ build, build_kble_serialport_win, publish_dry_run ]
     permissions:
       contents: write
 
