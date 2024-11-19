@@ -98,7 +98,7 @@ jobs:
 
       - name: install cargo-about
         run: |
-          cargo install --locked cargo-about
+          cargo install --locked cargo-about --version ${{ env.CARGO_ABOUT_VERSION }}
 
       - name: Build
         run: |
