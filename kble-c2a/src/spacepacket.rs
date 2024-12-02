@@ -13,7 +13,7 @@ pub fn from_tc_tf(mut tc_tf: Bytes) -> Result<Bytes> {
     Ok(tc_tf)
 }
 
-const AOS_TF_SIZE: usize = 444;
+const AOS_TF_SIZE: usize = 500;
 // Version Number = 0b01
 // SCID = 0b0000_0000
 // VCID = 0b00_0000
