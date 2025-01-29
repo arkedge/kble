@@ -35,7 +35,7 @@ jobs:
           components: clippy, rustfmt
 
       - name: cache dependencies
-        uses: Swatinem/rust-cache@v2.7.5
+        uses: Swatinem/rust-cache@v2.7.7
 
       - name: install cargo-about
         run: |
