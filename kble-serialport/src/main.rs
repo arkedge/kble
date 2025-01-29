@@ -159,7 +159,9 @@ async fn handle_ws(ws: WebSocket, serialport: SerialStream) {
             let chunk = chunk?;
             tx.write_all(&chunk).await?;
         }
+        tx.flush().await?;
         anyhow::Ok(())
     };
-    futures::future::try_join(rx_fut, tx_fut).await.ok();
+    tokio::pin!(rx_fut, tx_fut);
+    futures::future::try_select(rx_fut, tx_fut).await.ok();
 }
