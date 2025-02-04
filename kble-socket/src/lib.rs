@@ -21,3 +21,8 @@ pub use tungstenite::from_tungstenite;
 mod axum;
 #[cfg(feature = "axum")]
 pub use crate::axum::from_axum;
+
+#[cfg(feature = "axum-08")]
+mod axum_08;
+#[cfg(feature = "axum-08")]
+pub use crate::axum_08::from_axum;
