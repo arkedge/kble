@@ -29,6 +29,7 @@ tokio = "1"
 tokio-util = { version = "0.7", features = ["codec"] }
 tokio-tungstenite = { version = "0.20" }
 axum = { version = "0.6", default-features = false }
+axum-08 = { package = "axum", version = "0.8", default-features = false }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"]}
 tracing = "0.1"
