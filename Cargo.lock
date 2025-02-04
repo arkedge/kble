@@ -144,7 +144,6 @@ dependencies = [
  "pin-project-lite",
  "rustversion",
  "serde",
- "serde_urlencoded",
  "sha1",
  "sync_wrapper 0.1.2",
  "tokio",
@@ -163,6 +162,7 @@ dependencies = [
  "axum-core 0.5.0",
  "base64 0.22.1",
  "bytes",
+ "form_urlencoded",
  "futures-util",
  "http 1.2.0",
  "http-body 1.0.1",
@@ -177,6 +177,8 @@ dependencies = [
  "pin-project-lite",
  "rustversion",
  "serde",
+ "serde_path_to_error",
+ "serde_urlencoded",
  "sha1",
  "sync_wrapper 1.0.2",
  "tokio",
@@ -727,9 +729,9 @@ dependencies = [
 
 [[package]]
 name = "httparse"
-version = "1.8.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d897f394bad6a705d5f4104762e116a75639e470d80901eed05a860a95cb1904"
+checksum = "f2d708df4e7140240a16cd6ab0ab65c972d7433ab77819ea693fde9c43811e2a"
 
 [[package]]
 name = "httpdate"
@@ -767,9 +769,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc2b571658e38e0c01b1fdca3bbbe93c00d3d71693ff2770043f8c29bc7d6f80"
 dependencies = [
  "bytes",
+ "futures-channel",
+ "futures-util",
  "http 1.2.0",
  "http-body 1.0.1",
+ "httparse",
  "httpdate",
+ "itoa",
  "pin-project-lite",
  "smallvec",
  "tokio",
@@ -963,7 +969,7 @@ name = "kble-serialport"
 version = "0.4.1"
 dependencies = [
  "anyhow",
- "axum 0.6.20",
+ "axum 0.8.1",
  "bytes",
  "clap",
  "futures",
@@ -1487,6 +1493,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_path_to_error"
+version = "0.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af99884400da37c88f5e9146b7f1fd0fbcae8f6eec4e9da38b67d05486f814a6"
+dependencies = [
+ "itoa",
+ "serde",
+]
+
+[[package]]
 name = "serde_urlencoded"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1852,7 +1868,6 @@ dependencies = [
  "tokio",
  "tower-layer",
  "tower-service",
- "tracing",
 ]
 
 [[package]]
@@ -1868,6 +1883,7 @@ dependencies = [
  "tokio",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
