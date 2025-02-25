@@ -13,7 +13,7 @@ permissions:
 
 env:
   # renovate: datasource=github-releases depName=EmbarkStudios/cargo-about
-  CARGO_ABOUT_VERSION: 0.6.4
+  CARGO_ABOUT_VERSION: 0.7.0
 
 jobs:
   verify-crate:
