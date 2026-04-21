@@ -219,7 +219,11 @@ mod tests {
         }
 
         assert_eq!(sp_remaining, 0, "SP not fully contained in provided frames");
-        assert_eq!(collected.freeze(), *expected, "round-trip SP bytes mismatch");
+        assert_eq!(
+            collected.freeze(),
+            *expected,
+            "round-trip SP bytes mismatch"
+        );
     }
 
     /// Common checks applied to every emitted frame list.
@@ -228,7 +232,12 @@ mod tests {
         for (i, tf) in frames.iter().enumerate() {
             assert_eq!(tf.len(), AOS_TF_SIZE, "frame {} has wrong size", i);
             // AOS TF PH: VN/SCID/VCID prefix
-            assert_eq!(&tf[..2], &AOS_TF_PH_VN_SCID_VCID, "frame {} has wrong PH prefix", i);
+            assert_eq!(
+                &tf[..2],
+                &AOS_TF_PH_VN_SCID_VCID,
+                "frame {} has wrong PH prefix",
+                i
+            );
             // CLCW at tail
             assert_eq!(&tf[440..444], &AOS_TF_CLCW, "frame {} has wrong CLCW", i);
         }
@@ -341,7 +350,10 @@ mod tests {
         expected.extend(std::iter::repeat(0u8).take(idle_data_len));
         expected.extend_from_slice(&AOS_TF_CLCW);
 
-        assert_eq!(frames[0], expected, "output must be byte-for-byte identical to legacy");
+        assert_eq!(
+            frames[0], expected,
+            "output must be byte-for-byte identical to legacy"
+        );
     }
 
     // ── Case B (multi-frame, non-pathological) ────────────────────────────────────
@@ -431,7 +443,12 @@ mod tests {
         assert_eq!(fc, 5);
         assert_eq!(fhp(&frames[0]), 0);
         for i in 1..4 {
-            assert_eq!(fhp(&frames[i]), FHP_NO_HDR, "frame {} should be continuation", i);
+            assert_eq!(
+                fhp(&frames[i]),
+                FHP_NO_HDR,
+                "frame {} should be continuation",
+                i
+            );
         }
         assert_eq!(fhp(&frames[4]), 2048 - 4 * 432); // = 320
         assert_sp_round_trip(&frames, &sp, 0);
