@@ -89,12 +89,10 @@ async fn run_sp_from_tc_tf() -> Result<()> {
 async fn run_sp_to_aos_tf() -> Result<()> {
     let (mut tx, mut rx) = kble_socket::from_stdio().await;
     let mut frame_count = 0;
-    loop {
-        let Some(spacepacket) = rx.next().await else {
-            break;
-        };
-        let aos_tf = spacepacket::to_aos_tf(&mut frame_count, spacepacket?)?;
-        tx.send(aos_tf.freeze()).await?;
+    while let Some(spacepacket) = rx.next().await {
+        for tf in spacepacket::to_aos_tfs(&mut frame_count, spacepacket?)? {
+            tx.send(tf.freeze()).await?;
+        }
     }
     Ok(())
 }
