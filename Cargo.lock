@@ -831,6 +831,7 @@ dependencies = [
  "clap",
  "futures",
  "kble-socket",
+ "kble-test-support",
  "miniz_oxide",
  "notalawyer",
  "notalawyer-build",
