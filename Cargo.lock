@@ -789,6 +789,7 @@ dependencies = [
  "notalawyer",
  "notalawyer-build",
  "notalawyer-clap",
+ "percent-encoding",
  "pin-project",
  "proptest",
  "serde",

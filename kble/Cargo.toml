@@ -19,6 +19,7 @@ pin-project = "1"
 tokio = { workspace = true, features = ["full"] }
 async-trait = "0.1"
 url = { version = "2", features = ["serde"] }
+percent-encoding = "2"
 tokio-tungstenite.workspace = true
 clap.workspace = true
 serde.workspace = true

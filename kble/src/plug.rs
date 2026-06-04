@@ -58,8 +58,17 @@ async fn connect_exec(url: &Url) -> Result<(Backend, PlugSink, PlugStream)> {
     ensure!(url.port().is_none());
     ensure!(url.query().is_none());
     ensure!(url.fragment().is_none());
+    // `url.path()` percent-encodes an absolute path: `exec:/usr/bin/foo bar`
+    // yields `/usr/bin/foo%20bar`, so feeding it straight to `sh -c` would run a
+    // command containing a literal `%20`. (Opaque paths like `exec:foo bar` keep
+    // the space, so this is a no-op for them.) Decode it back to the intended
+    // shell command, which is what makes an absolute-path `exec:` plug with
+    // arguments work.
+    let command = percent_encoding::percent_decode_str(url.path())
+        .decode_utf8()
+        .with_context(|| format!("exec command is not valid UTF-8: {url}"))?;
     let mut proc = tokio::process::Command::new("sh")
-        .args(["-c", url.path()])
+        .args(["-c", command.as_ref()])
         .stderr(Stdio::inherit())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
