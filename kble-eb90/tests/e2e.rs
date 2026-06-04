@@ -85,6 +85,18 @@ async fn roundtrips_simple_payload() {
     assert_eq!(decoded, &payload[..]);
 }
 
+/// The empty payload is the boundary the property generators below exclude
+/// (they start at length 1). EB90 frames a zero-length body just like any
+/// other, so it must round-trip to empty.
+#[tokio::test]
+async fn roundtrips_empty_payload() {
+    let decoded = roundtrip(b"").await;
+    assert!(
+        decoded.is_empty(),
+        "empty payload must round-trip to empty, got {decoded:?}"
+    );
+}
+
 proptest! {
     // Each case spawns two processes, so keep the count modest. Integration
     // tests have no crate-root source dir, so disable the regression file.
