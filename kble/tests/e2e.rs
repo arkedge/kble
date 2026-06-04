@@ -10,6 +10,11 @@
 //! connects to it as a client, so the tests stand up in-process `ws://` plugs
 //! (`kble_test_support::WsPlug`) as a link's endpoints and push bytes through
 //! the real orchestrator process.
+//!
+//! The pipeline test goes further: it wires `ws://` endpoints around *real*
+//! `exec:` plugs (`kble-eb90 encode`/`decode`) so a payload round-trips through
+//! two orchestrator-launched processes, exercising the `exec:` spawn path and
+//! multi-link wiring end to end.
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -77,6 +82,57 @@ async fn spawn_forwarder() -> (Child, WsPlugConn, WsPlugConn) {
     let source_conn = source_conn.expect("orchestrator connects to source plug");
     let sink_conn = sink_conn.expect("orchestrator connects to sink plug");
     (child, source_conn, sink_conn)
+}
+
+/// Absolute path to a sibling plug binary (e.g. `kble-eb90`) in the same Cargo
+/// target dir as the orchestrator. Cargo only sets `CARGO_BIN_EXE_*` for this
+/// crate's own binary, so a cross-crate plug is located relative to it. The
+/// binary must already be built: `cargo test` builds every workspace member, so
+/// CI is fine; for an isolated `cargo test -p kble`, `cargo build -p <name>` first.
+fn plug_bin(name: &str) -> PathBuf {
+    let path = Path::new(env!("CARGO_BIN_EXE_kble")).with_file_name(name);
+    assert!(
+        path.exists(),
+        "{name} binary not found at {path:?}; build the workspace first \
+         (`cargo test` builds all members; or `cargo build -p {name}`)"
+    );
+    path
+}
+
+/// Spawn the orchestrator wired as a pipeline through two real `exec:` plugs and
+/// hand back the observable `ws://` ends:
+///
+/// ```text
+/// gen (ws) -> enc (exec: kble-eb90 encode) -> dec (exec: kble-eb90 decode) -> sink (ws)
+/// ```
+///
+/// Bytes sent on `gen` are EB90-framed by `enc`, de-framed by `dec`, and must
+/// arrive on `sink` unchanged.
+async fn spawn_pipeline() -> (Child, WsPlugConn, WsPlugConn) {
+    let gen = WsPlug::bind().await.expect("bind gen plug");
+    let sink = WsPlug::bind().await.expect("bind sink plug");
+    let gen_url = gen.url();
+    let sink_url = sink.url();
+    let eb90 = plug_bin("kble-eb90");
+    let eb90 = eb90.display();
+    // The path is interpolated unquoted on purpose: an absolute path puts the
+    // arg-separator space into `url.path()` as `%20`, which is exactly the
+    // percent-decoding the orchestrator (and this pipeline) must handle —
+    // quoting would make the URL opaque and bypass it. This assumes the cargo
+    // target path has no spaces or URL-reserved chars (`#`/`?`), which holds in
+    // CI and typical checkouts; otherwise `sh -c` would word-split the path.
+    let yaml = format!(
+        "plugs:\n  gen: {gen_url}\n  enc: exec:{eb90} encode\n  dec: exec:{eb90} decode\n  \
+         sink: {sink_url}\nlinks:\n  gen: enc\n  enc: dec\n  dec: sink\n"
+    );
+    let config = write_spaghetti(&yaml);
+
+    let child = kble(&config).spawn().expect("spawn kble orchestrator");
+
+    let (gen_conn, sink_conn) = tokio::join!(gen.accept(), sink.accept());
+    let gen_conn = gen_conn.expect("orchestrator connects to gen plug");
+    let sink_conn = sink_conn.expect("orchestrator connects to sink plug");
+    (child, gen_conn, sink_conn)
 }
 
 /// Drive a clean orchestrator shutdown and assert it exits successfully.
@@ -156,6 +212,23 @@ async fn forwards_frames_in_order() {
 async fn exits_cleanly_when_the_only_link_closes() {
     let (child, source, sink) = spawn_forwarder().await;
     shutdown_and_assert_clean_exit(child, source, sink).await;
+}
+
+/// A payload round-trips through a pipeline of two real `exec:` plugs the
+/// orchestrator launches: `gen -> kble-eb90 encode -> kble-eb90 decode -> sink`.
+/// `encode` frames it, `decode` removes the framing, so it must arrive on `sink`
+/// byte-for-byte — proving the orchestrator spawns `exec:` plugs and wires a
+/// multi-link chain correctly.
+#[tokio::test]
+async fn roundtrips_through_an_exec_plug_pipeline() {
+    let (child, mut gen, mut sink) = spawn_pipeline().await;
+
+    let payload = Bytes::from_static(b"multi-hop payload through the eb90 codec");
+    gen.send(payload.clone()).await.expect("gen send");
+    let got = sink.recv().await.expect("sink recv");
+    assert_eq!(got, payload);
+
+    shutdown_and_assert_clean_exit(child, gen, sink).await;
 }
 
 proptest! {
