@@ -32,8 +32,24 @@ async fn main() -> Result<()> {
 
     let args = Args::parse_with_license_notice(include_notice!());
     match args.command {
+        // `record` ends only when its stdin closes, so it never hits the hang
+        // below; returning normally also lets its dump-file writes flush during
+        // runtime shutdown (an explicit `process::exit` here could truncate the
+        // last record).
         Commands::Record { output_dir } => run_record(&output_dir).await,
-        Commands::Replay { input_file } => run_replay(&input_file).await,
+        Commands::Replay { input_file } => {
+            let result = run_replay(&input_file).await;
+            if let Err(e) = &result {
+                tracing::error!("replay failed: {e}");
+            }
+            // `replay` finishes when its input *file* is exhausted while a
+            // spawned task is still blocked reading stdin via
+            // `kble_socket::from_stdio` (`tokio::io::stdin()`, whose blocking
+            // read cannot be cancelled). Returning to the runtime would block
+            // shutdown on that thread and hang the process after playback, so
+            // exit explicitly.
+            std::process::exit(i32::from(result.is_err()))
+        }
     }
 }
 
