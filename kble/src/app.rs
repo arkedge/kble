@@ -40,7 +40,9 @@ pub async fn run(config: &Config, termination_grace_period_secs: u64) -> Result<
     });
 
     let (terminated_link, _, link_futs) = futures::future::select_all(link_futs).await;
-    quit_tx.send(())?;
+    // Ignore the no-receiver error: if every other link has already finished,
+    // there is nobody left to signal and nothing left to quit.
+    let _ = quit_tx.send(());
     let links = future::join_all(link_futs).await;
     let links = links.into_iter().chain(std::iter::once(terminated_link));
 
