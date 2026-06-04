@@ -807,6 +807,7 @@ dependencies = [
  "clap",
  "futures",
  "kble-socket",
+ "kble-test-support",
  "notalawyer",
  "notalawyer-build",
  "notalawyer-clap",
