@@ -11,7 +11,7 @@ publish = false
 anyhow.workspace = true
 bytes.workspace = true
 futures-util.workspace = true
-tokio = { workspace = true, features = ["process", "io-util", "time"] }
+tokio = { workspace = true, features = ["process", "io-util", "time", "net"] }
 tokio-tungstenite.workspace = true
 kble-socket = { workspace = true, features = ["tungstenite"] }
 pin-project-lite.workspace = true
