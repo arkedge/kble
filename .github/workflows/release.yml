@@ -26,7 +26,7 @@ jobs:
           - aarch64-unknown-linux-musl
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: install apt depenedencies
         run: |
@@ -44,12 +44,12 @@ jobs:
         run: |
           awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
 
-      - uses: dtolnay/rust-toolchain@v1
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: ${{ steps.toolchain.outputs.toolchain }}
           targets: ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@v2.7.7
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
 
       - name: install cargo-about
         run: |
@@ -68,7 +68,7 @@ jobs:
           done
           ls -lh ./bin
 
-      - uses: actions/upload-artifact@v4.6.1
+      - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: release-executable-${{ matrix.target }}
           if-no-files-found: error
@@ -91,7 +91,7 @@ jobs:
       TARGET: x86_64-pc-windows-msvc
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Get Rust toolchain
         id: toolchain
@@ -100,12 +100,12 @@ jobs:
         run: |
           awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
 
-      - uses: dtolnay/rust-toolchain@v1
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: ${{ steps.toolchain.outputs.toolchain }}
           targets: ${{ env.TARGET }}
 
-      - uses: Swatinem/rust-cache@v2.7.7
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
 
       - name: install cargo-about
         run: |
@@ -122,7 +122,7 @@ jobs:
           cp "./target/${{ env.TARGET }}/release/kble-serialport.exe" "./bin/kble-serialport-${{ env.TARGET }}.exe"
           ls -lh ./bin
 
-      - uses: actions/upload-artifact@v4.6.1
+      - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: release-executable-${{ env.TARGET }}
           if-no-files-found: error
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Get Rust toolchain
         id: toolchain
@@ -141,11 +141,11 @@ jobs:
         run: |
           awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
 
-      - uses: dtolnay/rust-toolchain@v1
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: ${{ steps.toolchain.outputs.toolchain }}
 
-      - uses: Swatinem/rust-cache@v2.7.7
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
 
       - name: install cargo-about
         run: |
@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/download-artifact@v4.1.9
+      - uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
         with:
           pattern: release-executable-*
           merge-multiple: true
@@ -183,7 +183,7 @@ jobs:
 
       - name: Release to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2.2.1
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
           draft: true
           fail_on_unmatched_files: true
