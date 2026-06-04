@@ -15,10 +15,12 @@ futures-util.workspace = true
 pin-project-lite = { workspace = true, optional = true }
 tokio.workspace = true
 tokio-tungstenite = { workspace = true, optional = true }
-axum.workspace = true
+axum = { workspace = true, optional = true }
+axum-08 = { workspace = true, optional = true }
 bytes.workspace = true
 
 [features]
 stdio = ["tokio/io-std", "dep:pin-project-lite"]
 tungstenite = ["dep:tokio-tungstenite"]
 axum = ["axum/ws"]
+axum-08 = ["axum-08/ws"]

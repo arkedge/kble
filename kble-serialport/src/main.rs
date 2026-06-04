@@ -1,7 +1,7 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use anyhow::Result;
-use axum::{
+use axum_08::{
     extract::{ws::WebSocket, Query, WebSocketUpgrade},
     http::StatusCode,
     response::Response,
@@ -114,9 +114,8 @@ async fn main() -> Result<()> {
 
     let app = Router::new().route("/open", get(handle_get));
     let addr = SocketAddr::new(args.addr, args.port);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await?;
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum_08::serve(listener, app).await?;
     Ok(())
 }
 
