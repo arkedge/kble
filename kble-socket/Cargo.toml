@@ -19,6 +19,6 @@ axum.workspace = true
 bytes.workspace = true
 
 [features]
-stdio = ["tokio/io-std", "dep:pin-project-lite"]
+stdio = ["tokio/io-std", "tokio/net", "dep:pin-project-lite"]
 tungstenite = ["dep:tokio-tungstenite"]
 axum = ["axum/ws"]
