@@ -25,3 +25,7 @@ clap.workspace = true
 eb90 = "0.1.1"
 notalawyer.workspace = true
 notalawyer-clap.workspace = true
+
+[dev-dependencies]
+kble-test-support = { path = "../kble-test-support" }
+proptest.workspace = true

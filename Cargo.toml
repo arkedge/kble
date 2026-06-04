@@ -17,6 +17,7 @@ members = [
   "kble-eb90",
   "kble-tcp",
   "kble-dump",
+  "kble-test-support",
 ]
 
 [workspace.dependencies]
@@ -34,6 +35,11 @@ serde = { version = "1", features = ["derive"]}
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 kble-socket = "0.4"
+# Capped below 1.7: proptest 1.7+ pulls rand 0.9/getrandom 0.3, which raise the
+# MSRV above this workspace's pinned toolchain (see rust-toolchain). Default
+# features (fork/timeout) are dropped to avoid the tempfile -> wit-bindgen path,
+# which the pinned toolchain's Cargo cannot parse.
+proptest = { version = ">=1.5, <1.7", default-features = false, features = ["std", "bit-set"] }
 notalawyer = "0.2"
 notalawyer-clap = "0.2"
 notalawyer-build = "0.2"
