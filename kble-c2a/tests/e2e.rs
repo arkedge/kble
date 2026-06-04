@@ -1,10 +1,14 @@
-//! End-to-end tests for the `kble-c2a tfsync` subcommand: launch the real
-//! binary and drive it over the WebSocket-over-stdio protocol via
-//! `kble-test-support`, exactly as the `kble` orchestrator would.
+//! End-to-end tests for the `kble-c2a` plug: launch the real binary and drive
+//! it over the WebSocket-over-stdio protocol via `kble-test-support`, exactly
+//! as the `kble` orchestrator would.
 //!
-//! `tfsync` splits a byte stream into individual 444-byte AOS Transfer Frames
-//! by heuristically locating each frame's primary header and trailer (see
-//! `kble-c2a/src/tfsync.rs`). These cases mirror the codec's unit tests, but
+//! Covers both subcommands:
+//! - `tfsync` splits a byte stream into individual 444-byte AOS Transfer Frames
+//!   by heuristically locating each frame's primary header and trailer.
+//! - `spacepacket` unwraps a Space Packet from a TC Transfer Frame (`from-tc-tf`)
+//!   and wraps one into AOS Transfer Frames (`to-aos-tf`).
+//!
+//! These mirror the codec/transform unit tests (see `kble-c2a/src/`) but
 //! exercise the real process and its stdio framing end to end.
 
 use bytes::Bytes;
@@ -104,4 +108,74 @@ async fn tfsync_resyncs_past_leading_junk() {
     plug.shutdown().await.expect("tfsync exits cleanly");
 
     assert_eq!(frame.as_ref(), TRANSFER_FRAME.as_slice());
+}
+
+// ── spacepacket ──────────────────────────────────────────────────────────────
+
+/// Build a minimal valid CCSDS Space Packet of `total_len` bytes (6-byte
+/// primary header + body), mirroring the `spacepacket` unit-test helper.
+fn make_space_packet(total_len: usize) -> Vec<u8> {
+    assert!(total_len >= 7, "a Space Packet is at least 7 bytes");
+    let mut v = Vec::with_capacity(total_len);
+    v.extend_from_slice(&[0x08, 0x42]); // version/type/sec-hdr-flag, APID=0x042
+    v.extend_from_slice(&[0xC0, 0x00]); // seq flags = 11 (unsegmented), count = 0
+    v.extend_from_slice(&((total_len - 7) as u16).to_be_bytes()); // PacketDataLength
+    for i in 0..(total_len - 6) {
+        v.push((i & 0xFF) as u8); // deterministic body
+    }
+    v
+}
+
+/// `spacepacket from-tc-tf` strips the 6-byte TC TF header/segment and the
+/// 2-byte FECF, returning the encapsulated Space Packet bytes.
+#[tokio::test]
+async fn spacepacket_from_tc_tf_unwraps_the_packet() {
+    let sp = make_space_packet(32);
+    let mut tc_tf = vec![0u8; 6]; // 5-byte TC TF primary header + 1-byte segment header
+    tc_tf.extend_from_slice(&sp);
+    tc_tf.extend_from_slice(&[0xAB, 0xCD]); // 2-byte FECF, dropped on unwrap
+
+    let mut plug = Plug::spawn(c2a(&["spacepacket", "from-tc-tf"]))
+        .await
+        .expect("spawn kble-c2a spacepacket from-tc-tf");
+    plug.send(Bytes::from(tc_tf)).await.expect("send TC TF");
+    let out = plug.recv().await.expect("unwrapped space packet");
+    plug.shutdown().await.expect("exits cleanly");
+
+    assert_eq!(out.as_ref(), sp.as_slice());
+}
+
+/// `spacepacket to-aos-tf` wraps a small Space Packet into exactly one 444-byte
+/// AOS Transfer Frame whose M_PDU Data Zone begins with the packet.
+#[tokio::test]
+async fn spacepacket_to_aos_tf_wraps_a_small_packet() {
+    let sp = make_space_packet(136);
+
+    let mut plug = Plug::spawn(c2a(&["spacepacket", "to-aos-tf"]))
+        .await
+        .expect("spawn kble-c2a spacepacket to-aos-tf");
+    plug.send(Bytes::copy_from_slice(&sp))
+        .await
+        .expect("send space packet");
+    let tf = plug.recv().await.expect("one AOS transfer frame");
+    plug.shutdown().await.expect("exits cleanly");
+
+    assert_eq!(tf.len(), 444, "AOS TF must be 444 bytes");
+    assert_eq!(
+        &tf[..2],
+        &[0x40, 0x00],
+        "AOS TF PH version/SCID/VCID prefix"
+    );
+    assert_eq!(
+        &tf[6..8],
+        &[0x00, 0x00],
+        "single-frame First Header Pointer = 0"
+    );
+    assert_eq!(&tf[440..444], &[0x00, 0x00, 0x00, 0x00], "CLCW tail");
+    // The M_PDU Data Zone starts at offset 8 and begins with the Space Packet.
+    assert_eq!(
+        &tf[8..8 + sp.len()],
+        sp.as_slice(),
+        "Data Zone must start with the Space Packet"
+    );
 }
