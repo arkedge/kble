@@ -17,6 +17,7 @@ members = [
   "kble-eb90",
   "kble-tcp",
   "kble-dump",
+  "kble-test-support",
 ]
 
 [workspace.dependencies]

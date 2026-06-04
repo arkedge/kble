@@ -1,0 +1,20 @@
+[package]
+name = "kble-test-support"
+description = "Test-only helpers for driving kble plug processes over WebSocket-over-stdio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+anyhow.workspace = true
+bytes.workspace = true
+futures-util.workspace = true
+tokio = { workspace = true, features = ["process", "io-util", "time"] }
+tokio-tungstenite.workspace = true
+kble-socket = { workspace = true, features = ["tungstenite"] }
+pin-project-lite.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }
