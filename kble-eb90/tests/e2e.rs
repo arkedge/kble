@@ -22,13 +22,6 @@ use tokio::runtime::Runtime;
 /// Upper bound (exclusive) on generated payload lengths.
 const MAX_PAYLOAD_LEN: usize = 2048;
 
-/// `kble-eb90 decode` assembles each whole frame in a fixed-capacity buffer
-/// (`eb90`'s parser never grows it past the initial capacity), so the buffer
-/// must exceed the largest *encoded* frame — payload plus EB90 framing overhead.
-/// A frame larger than this is never emitted, so we give generous headroom above
-/// `MAX_PAYLOAD_LEN` rather than relying on the 2048-byte default.
-const DECODE_BUFFER_SIZE: usize = MAX_PAYLOAD_LEN * 2;
-
 /// Build a `Command` that runs the freshly-built `kble-eb90` binary with the
 /// given subcommand. Cargo exposes the binary path to integration tests of the
 /// same crate via this env var, so no `escargot`/`assert_cmd` is needed.
@@ -51,9 +44,9 @@ async fn encode(payload: Bytes) -> Bytes {
 
 /// Run `frame` through a fresh `decode` process and return the decoded payload.
 async fn decode(frame: Bytes) -> Bytes {
-    let mut cmd = eb90("decode");
-    cmd.arg("--buffer-size").arg(DECODE_BUFFER_SIZE.to_string());
-    let mut dec = Plug::spawn(cmd).await.expect("spawn kble-eb90 decode");
+    let mut dec = Plug::spawn(eb90("decode"))
+        .await
+        .expect("spawn kble-eb90 decode");
     dec.send(frame).await.expect("send to decode");
     let decoded = dec.recv().await.expect("decode produced a frame");
     dec.shutdown().await.expect("decode exits cleanly");
@@ -95,6 +88,16 @@ async fn roundtrips_empty_payload() {
         decoded.is_empty(),
         "empty payload must round-trip to empty, got {decoded:?}"
     );
+}
+
+/// A frame far larger than the old 2048-byte default decode buffer now
+/// round-trips with default settings: the default buffer is the maximum EB90
+/// frame size, so no valid frame is ever dropped as over-buffer.
+#[tokio::test]
+async fn roundtrips_large_payload_with_default_buffer() {
+    let payload = vec![0x5Au8; 10_000];
+    let decoded = roundtrip(&payload).await;
+    assert_eq!(decoded.as_ref(), payload.as_slice());
 }
 
 proptest! {

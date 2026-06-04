@@ -16,11 +16,18 @@ struct Args {
     command: Commands,
 }
 
+/// The largest possible EB90 frame: header + maximum (u16) body + footer.
+/// Defaulting the decode buffer to this guarantees every valid frame fits, so
+/// none is ever dropped for being over-buffer. A smaller `--buffer-size` still
+/// works, but any frame larger than it is skipped and logged as `InvalidLength`
+/// junk (the decoder recovers and keeps processing) rather than emitted.
+const MAX_FRAME_SIZE: usize = eb90::HEADER_SIZE + u16::MAX as usize + eb90::FOOTER_SIZE;
+
 #[derive(Subcommand, Debug)]
 enum Commands {
     Encode,
     Decode {
-        #[clap(long, short, default_value_t = 2048)]
+        #[clap(long, short, default_value_t = MAX_FRAME_SIZE)]
         buffer_size: usize,
     },
 }
@@ -70,6 +77,9 @@ async fn run_decode(buffer_size: usize) -> Result<()> {
             use eb90::codec::Decoded;
             match decoded {
                 Decoded::Frame(frame) => tx.send(frame).await?,
+                // A frame whose declared size exceeds `--buffer-size` is reported
+                // as `InvalidLength` junk and skipped. With the default buffer
+                // (max frame size) this cannot happen for a valid frame.
                 Decoded::Junk(kind) => warn!(?kind, "received junk data"),
             }
         }
