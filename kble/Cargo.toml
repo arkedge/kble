@@ -28,3 +28,8 @@ tracing-subscriber.workspace = true
 tracing.workspace = true
 notalawyer.workspace = true
 notalawyer-clap.workspace = true
+
+[dev-dependencies]
+kble-test-support = { path = "../kble-test-support" }
+bytes.workspace = true
+proptest.workspace = true
