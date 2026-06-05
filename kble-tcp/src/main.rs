@@ -48,23 +48,14 @@ async fn main() -> Result<()> {
         anyhow::Ok(())
     };
 
-    let result = tokio::select! {
-        // Deterministic winner if both sides close in the same poll: the exit
-        // code and any logged error are then reproducible.
+    // Either side closing ends the bridge; `biased` makes the winner
+    // deterministic when both close in the same poll. With the piped stdin/stdout
+    // a plug has under the orchestrator, `kble_socket::from_stdio` is cancellable,
+    // so returning here lets the runtime shut down cleanly. Any `Err` is reported
+    // by `main`'s `Termination` impl.
+    tokio::select! {
         biased;
         r = to_tcp => r,
         r = from_tcp => r,
-    };
-    if let Err(e) = &result {
-        tracing::error!("bridge terminated with error: {e}");
     }
-
-    // `kble_socket::from_stdio` reads via `tokio::io::stdin()`, whose blocking
-    // read thread cannot be cancelled mid-read. The bridge can legitimately
-    // finish via its TCP side (`from_tcp` hits EOF) while stdin is still open;
-    // returning to the runtime would then block shutdown on that stuck thread,
-    // so a closed TCP peer would never terminate us (and our WS output would
-    // stay open, hiding the disconnect from the orchestrator). Exit explicitly
-    // so either side closing promptly ends the process.
-    std::process::exit(i32::from(result.is_err()))
 }
