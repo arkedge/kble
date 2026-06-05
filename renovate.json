@@ -4,7 +4,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [".github/workflows/*"],
+      "managerFilePatterns": [
+        "/.github/workflows/*/"
+      ],
       "matchStrings": [
         "datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*?_VERSION:\\s(?<currentValue>.*)\\s",
       ],
