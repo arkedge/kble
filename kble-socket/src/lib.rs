@@ -10,7 +10,12 @@ pub type SocketStream = Pin<Box<dyn Stream<Item = Result<Bytes>> + Send + 'stati
 #[cfg(feature = "stdio")]
 mod stdio;
 #[cfg(feature = "stdio")]
-pub use stdio::{from_stdio, Stdio};
+pub use stdio::Stdio;
+// `from_stdio` builds a WebSocket, so it also needs `tungstenite`. Gate the
+// re-export on both features so `features = ["stdio"]` alone still compiles
+// (giving the `Stdio` byte-stream adapter without `from_stdio`).
+#[cfg(all(feature = "stdio", feature = "tungstenite"))]
+pub use stdio::from_stdio;
 
 #[cfg(feature = "tungstenite")]
 mod tungstenite;
