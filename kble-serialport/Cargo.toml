@@ -26,3 +26,9 @@ serde.workspace = true
 bytes.workspace = true
 notalawyer.workspace = true
 notalawyer-clap.workspace = true
+
+[dev-dependencies]
+# A pty pair stands in for a real serial device in the E2E tests.
+serialport = "4"
+# A real WebSocket client to drive the axum server end to end.
+tokio-tungstenite = { workspace = true }
