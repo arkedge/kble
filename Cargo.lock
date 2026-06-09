@@ -879,8 +879,10 @@ dependencies = [
  "notalawyer-build",
  "notalawyer-clap",
  "serde",
+ "serialport",
  "tokio",
  "tokio-serial",
+ "tokio-tungstenite",
  "tracing",
  "tracing-subscriber",
 ]
