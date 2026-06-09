@@ -6,11 +6,20 @@
 //! surfacing as a confusing failure somewhere downstream.
 //!
 //! Enabled when both `tungstenite` and `axum` are on, as in a workspace build.
+//!
+//! Every receive/connect await is bounded by [`TIMEOUT`]: a regression that
+//! stops an adapter producing frames should fail fast at the offending line, not
+//! hang the test (and CI) indefinitely.
 
 #![cfg(all(feature = "tungstenite", feature = "axum"))]
 
+use std::time::Duration;
+
 use bytes::Bytes;
 use futures_util::{SinkExt, StreamExt};
+
+/// Upper bound on how long any single round-trip step may take.
+const TIMEOUT: Duration = Duration::from_secs(5);
 
 /// `from_tungstenite`: bytes round-trip both ways between the adapter and a raw
 /// tokio-tungstenite peer connected over an in-memory duplex (no sockets, no
@@ -31,9 +40,9 @@ async fn from_tungstenite_round_trips_binary_frames() {
         .send(Message::Binary(b"to the adapter".to_vec()))
         .await
         .expect("peer sends a binary frame");
-    let got = stream
-        .next()
+    let got = tokio::time::timeout(TIMEOUT, stream.next())
         .await
+        .expect("adapter stream timed out")
         .expect("adapter stream yields a frame")
         .expect("frame is not an error");
     assert_eq!(&got[..], b"to the adapter");
@@ -42,9 +51,9 @@ async fn from_tungstenite_round_trips_binary_frames() {
     sink.send(Bytes::from_static(b"from the adapter"))
         .await
         .expect("adapter sink accepts a frame");
-    match client
-        .next()
+    match tokio::time::timeout(TIMEOUT, client.next())
         .await
+        .expect("peer receive timed out")
         .expect("peer receives a frame")
         .expect("frame is not an error")
     {
@@ -83,17 +92,21 @@ async fn from_axum_round_trips_binary_frames() {
         server.await.expect("axum server runs");
     });
 
-    let (mut client, _resp) = tokio_tungstenite::connect_async(format!("ws://{addr}/"))
-        .await
-        .expect("websocket upgrade against the echo server");
+    let (mut client, _resp) = tokio::time::timeout(
+        TIMEOUT,
+        tokio_tungstenite::connect_async(format!("ws://{addr}/")),
+    )
+    .await
+    .expect("connect timed out")
+    .expect("websocket upgrade against the echo server");
 
     client
         .send(Message::Binary(b"echo me".to_vec()))
         .await
         .expect("client sends a binary frame");
-    match client
-        .next()
+    match tokio::time::timeout(TIMEOUT, client.next())
         .await
+        .expect("echo receive timed out")
         .expect("client receives the echo")
         .expect("frame is not an error")
     {
