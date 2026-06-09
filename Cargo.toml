@@ -4,6 +4,7 @@ description = "Virtual Harness Toolkit"
 repository = "https://github.com/arkedge/kble"
 license = "MIT"
 edition = "2021"
+rust-version = "1.78"
 readme = "README.md"
 
 [workspace]
