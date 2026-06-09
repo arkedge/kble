@@ -132,18 +132,22 @@ jobs:
     name: publish (dry-run)
     runs-on: ubuntu-24.04
 
+    # This job checks that each crate is publishable to crates.io, which is a
+    # question about current stable Cargo, not our MSRV. Library crates don't
+    # ship their Cargo.lock, so the verify build re-resolves dependencies; on
+    # the MSRV-pinned toolchain that pulls in deps requiring a newer Cargo (e.g.
+    # idna_adapter needs the edition2024 feature, stabilized in 1.85). The MSRV
+    # is verified separately by the `msrv` job in rust.yml. Run on stable and
+    # override the repo's rust-toolchain pin via RUSTUP_TOOLCHAIN.
+    env:
+      RUSTUP_TOOLCHAIN: stable
+
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - name: Get Rust toolchain
-        id: toolchain
-        working-directory: .
-        run: |
-          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
-
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
-          toolchain: ${{ steps.toolchain.outputs.toolchain }}
+          toolchain: stable
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
