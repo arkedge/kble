@@ -86,6 +86,10 @@ async fn from_axum_round_trips_binary_frames() {
     }
 
     let app = Router::new().route("/", get(echo));
+    // axum 0.6 server setup. At the axum 0.8 bump (#174) this migrates to
+    // `tokio::net::TcpListener::bind` + `axum::serve` — the same change the
+    // binary needs; the WebSocketUpgrade -> `from_axum` path under test is
+    // unchanged, so the adapter stays covered across the bump.
     let server = axum::Server::bind(&"127.0.0.1:0".parse().unwrap()).serve(app.into_make_service());
     let addr = server.local_addr();
     tokio::spawn(async move {
@@ -114,5 +118,6 @@ async fn from_axum_round_trips_binary_frames() {
         other => panic!("expected a binary echo, got: {other:?}"),
     }
 
-    client.close(None).await.ok();
+    // Bounded like the rest of the awaits: a hung close shouldn't stall the suite.
+    let _ = tokio::time::timeout(TIMEOUT, client.close(None)).await;
 }
