@@ -26,8 +26,8 @@ use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 type Ws = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
 /// Ask the OS for a free port, then release it so kble-serialport can bind it.
-/// There is a small race between releasing and re-binding, but
-/// [`wait_until_listening`] turns a lost race into a clean failure, not a flake.
+/// The release→rebind gap is a race; [`spawn_server`] serializes it across the
+/// suite so two parallel tests can't pick the same port.
 fn free_port() -> u16 {
     TcpListener::bind(("127.0.0.1", 0))
         .expect("bind ephemeral port")
@@ -59,6 +59,24 @@ async fn wait_until_listening(port: u16) {
     panic!("kble-serialport never started listening on 127.0.0.1:{port}");
 }
 
+/// Serializes port selection + bind across the suite's tests. Without it two
+/// parallel tests can grab the same just-freed ephemeral port; the loser's
+/// server never binds, so its `connect_async` hits ConnectionRefused. Held only
+/// for setup — the assertions still run concurrently.
+static SETUP: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+/// Spawn kble-serialport on a free port and wait until it is listening, with
+/// port selection serialized (see [`SETUP`]).
+async fn spawn_server() -> (Child, u16) {
+    let _setup = SETUP.lock().await;
+    let port = free_port();
+    let child = kble_serialport(port)
+        .spawn()
+        .expect("spawn kble-serialport");
+    wait_until_listening(port).await;
+    (child, port)
+}
+
 /// Spawn kble-serialport, create a pty pair, open a WebSocket to `/open` pointed
 /// at the pty slave, and hand back the child, the connected WS client, and the
 /// pty master — the "device" end the test reads from and writes to.
@@ -67,11 +85,7 @@ async fn spawn_bridge() -> (Child, Ws, TTYPort) {
     let slave_name = slave.name().expect("slave pty has a /dev/pts path");
     drop(slave); // kble-serialport reopens it by name via tokio_serial
 
-    let port = free_port();
-    let child = kble_serialport(port)
-        .spawn()
-        .expect("spawn kble-serialport");
-    wait_until_listening(port).await;
+    let (child, port) = spawn_server().await;
 
     let url = format!("ws://127.0.0.1:{port}/open?port={slave_name}&baudrate=9600");
     let (ws, _resp) = tokio_tungstenite::connect_async(url)
@@ -181,11 +195,7 @@ async fn reassembles_a_large_serial_payload_across_frames() {
 /// than crashing the server: `handle_get` opens the port *before* upgrading.
 #[tokio::test]
 async fn rejects_an_unopenable_serial_port() {
-    let port = free_port();
-    let mut child = kble_serialport(port)
-        .spawn()
-        .expect("spawn kble-serialport");
-    wait_until_listening(port).await;
+    let (mut child, port) = spawn_server().await;
 
     let url = format!("ws://127.0.0.1:{port}/open?port=/dev/kble-nonexistent-tty&baudrate=9600");
     let err = tokio_tungstenite::connect_async(url)
