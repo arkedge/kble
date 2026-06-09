@@ -29,6 +29,9 @@ notalawyer-clap.workspace = true
 
 [dev-dependencies]
 # A pty pair stands in for a real serial device in the E2E tests.
-serialport = "4"
+# `default-features = false` drops the libudev port-enumeration backend, which
+# the tests don't use (they open the pty by path) and which would otherwise
+# require libudev-dev on the build host.
+serialport = { version = "4", default-features = false }
 # A real WebSocket client to drive the axum server end to end.
 tokio-tungstenite = { workspace = true }
