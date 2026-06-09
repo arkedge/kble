@@ -83,6 +83,14 @@ jobs:
       - name: cache dependencies
         uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
 
+      # The binary crates' build scripts invoke cargo-about (via notalawyer-build)
+      # to bundle license info, so it must be on PATH even for a plain check. Use
+      # a prebuilt binary so we don't recompile it under the MSRV toolchain.
+      - name: install cargo-about
+        uses: taiki-e/install-action@cde8c9e634f4a17bc06b61413ac0ef75450eac46 # v2.81.4
+        with:
+          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
+
       # Verify the declared MSRV actually compiles. --all-targets pulls in the
       # dev-dependencies (notably proptest, which is version-capped in Cargo.toml
       # to keep this MSRV), and --locked ensures the committed Cargo.lock resolves
