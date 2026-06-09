@@ -22,3 +22,16 @@ bytes.workspace = true
 stdio = ["tokio/io-std", "tokio/net", "dep:pin-project-lite"]
 tungstenite = ["dep:tokio-tungstenite"]
 axum = ["axum/ws"]
+
+# Integration tests exercise the adapters in isolation: `from_tungstenite` over
+# an in-memory duplex, and `from_axum` against a real (in-process) axum server
+# driven by a real WebSocket client. They run when the `tungstenite` + `axum`
+# features are enabled (as they are in a workspace build). The extra axum
+# features give the in-process server (`tokio`/`http1`), and tokio-tungstenite is
+# the client.
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "io-util", "net", "time"] }
+tokio-tungstenite.workspace = true
+axum = { workspace = true, features = ["tokio", "http1", "ws"] }
+futures-util.workspace = true
+bytes.workspace = true
