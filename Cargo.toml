@@ -40,7 +40,7 @@ kble-socket = "0.4"
 # MSRV above this workspace's pinned toolchain (see rust-toolchain). Default
 # features (fork/timeout) are dropped to avoid the tempfile -> wit-bindgen path,
 # which the pinned toolchain's Cargo cannot parse.
-proptest = { version = ">=1.5, <1.7", default-features = false, features = ["std", "bit-set"] }
+proptest = { version = ">=1.5, <1.12", default-features = false, features = ["std", "bit-set"] }
 notalawyer = "0.2"
 notalawyer-clap = "0.2"
 notalawyer-build = "0.2"
