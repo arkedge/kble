@@ -51,9 +51,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
+      # Prebuilt binary (like the msrv job in rust.yml): the tool's own rustc
+      # requirement must not be coupled to the workspace's pinned toolchain.
       - name: install cargo-about
-        run: |
-          cargo install --locked cargo-about --version ${{ env.CARGO_ABOUT_VERSION }}
+        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
+        with:
+          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
       - name: Build
         run: |
@@ -107,9 +110,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
+      # Prebuilt binary (like the msrv job in rust.yml): the tool's own rustc
+      # requirement must not be coupled to the workspace's pinned toolchain.
       - name: install cargo-about
-        run: |
-          cargo install --locked cargo-about --version ${{ env.CARGO_ABOUT_VERSION }}
+        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
+        with:
+          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
       - name: Build
         run: |
@@ -151,9 +157,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
+      # Prebuilt binary (like the msrv job in rust.yml): the tool's own rustc
+      # requirement must not be coupled to the workspace's pinned toolchain.
       - name: install cargo-about
-        run: |
-          cargo install --locked cargo-about --version ${{ env.CARGO_ABOUT_VERSION }}
+        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
+        with:
+          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
       - name: cargo publish (dry-run)
         run: |
