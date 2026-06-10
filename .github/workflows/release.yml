@@ -85,7 +85,7 @@ jobs:
     # Also, kble-serialport is a very small component that does not need to be updated frequently for practical use.
     # For these reasons, we currently choose to run only kble-serialport on Windows host.
 
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     env:
       TARGET: x86_64-pc-windows-msvc
