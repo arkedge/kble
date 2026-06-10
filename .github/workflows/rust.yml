@@ -54,7 +54,7 @@ jobs:
       # feature combination so a crate that advertises a feature can't ship one
       # that fails to compile by itself.
       - name: install cargo-hack
-        uses: taiki-e/install-action@0631aa6515c7d545823c67cfae7ef4fc7f490154 # v2.81.8
+        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
         with:
           tool: cargo-hack
 
@@ -87,7 +87,7 @@ jobs:
       # to bundle license info, so it must be on PATH even for a plain check. Use
       # a prebuilt binary so we don't recompile it under the MSRV toolchain.
       - name: install cargo-about
-        uses: taiki-e/install-action@cde8c9e634f4a17bc06b61413ac0ef75450eac46 # v2.81.4
+        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
         with:
           tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
