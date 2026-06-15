@@ -43,4 +43,4 @@ kble-socket = "0.4"
 proptest = { version = ">=1.5, <1.12", default-features = false, features = ["std", "bit-set"] }
 notalawyer = "0.2"
 notalawyer-clap = "0.2"
-notalawyer-build = "0.2"
+notalawyer-build = "0.3"
