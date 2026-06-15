@@ -1040,9 +1040,9 @@ dependencies = [
 
 [[package]]
 name = "notalawyer"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8f10fae64217fe9e567380c332b648a937db0c756e11a17594bc8a8d5ca7762"
+checksum = "2fc5be961e2cc6065c0883fdacf24334f2f8dd02a303b883396ce233c0bc5769"
 
 [[package]]
 name = "notalawyer-build"
@@ -1052,9 +1052,9 @@ checksum = "0a23fb327485a4b7e648a4a23053456b400f5d3fed6cb4fc7b4029ac1f6297c8"
 
 [[package]]
 name = "notalawyer-clap"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6e87f4834f3bbf79650765227edffb5b40e96199a7d8ba04e57f433ea867f1e"
+checksum = "c06d05d1c513e430eccf036c16eca4e647e9ccdade1bced2bd48afe1c2e8a618"
 dependencies = [
  "clap",
  "notalawyer",
