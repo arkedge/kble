@@ -34,7 +34,13 @@ jobs:
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
+      # reviewdog's github-pr-review reporter only works on pull_request events;
+      # on merge_group (and push to main) there is no PR to attach review
+      # comments to, and reviewdog breaks the clippy output pipe (SIGPIPE, exit
+      # 141) as soon as clippy emits anything. clippy is advisory here (warnings
+      # never fail the build), so just skip it outside of PRs.
       - name: reviewdog / clippy
+        if: github.event_name == 'pull_request'
         uses: sksat/action-clippy@87e08e0c289f2654fe702b0aaf88c2f1027a3e57 # v1.1.1
         with:
           reporter: github-pr-review
