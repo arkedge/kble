@@ -12,10 +12,6 @@ permissions:
   checks: write
   pull-requests: write
 
-env:
-  # renovate: datasource=github-releases depName=EmbarkStudios/cargo-about
-  CARGO_ABOUT_VERSION: 0.6.4
-
 jobs:
   verify-crate:
     runs-on: ubuntu-latest
@@ -37,13 +33,6 @@ jobs:
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-
-      # Prebuilt binary (like the msrv job): the tool's own rustc requirement
-      # must not be coupled to the workspace's pinned toolchain.
-      - name: install cargo-about
-        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
-        with:
-          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
       - name: reviewdog / clippy
         uses: sksat/action-clippy@87e08e0c289f2654fe702b0aaf88c2f1027a3e57 # v1.1.1
@@ -86,14 +75,6 @@ jobs:
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-
-      # The binary crates' build scripts invoke cargo-about (via notalawyer-build)
-      # to bundle license info, so it must be on PATH even for a plain check. Use
-      # a prebuilt binary so we don't recompile it under the MSRV toolchain.
-      - name: install cargo-about
-        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
-        with:
-          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
       # Verify the declared MSRV actually compiles. --all-targets pulls in the
       # dev-dependencies (notably proptest, which is version-capped in Cargo.toml

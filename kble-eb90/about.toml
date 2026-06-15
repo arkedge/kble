@@ -1,3 +1,9 @@
+# notalawyer-build 0.3 pulls cargo-about in as a *library* build-dependency, so
+# cargo-about's own dependency tree (krates, rustls, ring, ...) appears in the
+# graph cargo-about scans. Those crates are build-time tooling and are not
+# shipped in the kble binaries, so exclude them from the license notice.
+ignore-build-dependencies = true
+
 accepted = [
     "MIT",
     "Apache-2.0",
