@@ -11,10 +11,6 @@ on:
     paths:
       - .github/workflows/release.yml
 
-env:
-  # renovate: datasource=github-releases depName=EmbarkStudios/cargo-about
-  CARGO_ABOUT_VERSION: 0.6.4
-
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -50,13 +46,6 @@ jobs:
           targets: ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-
-      # Prebuilt binary (like the msrv job in rust.yml): the tool's own rustc
-      # requirement must not be coupled to the workspace's pinned toolchain.
-      - name: install cargo-about
-        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
-        with:
-          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
       - name: Build
         run: |
@@ -110,13 +99,6 @@ jobs:
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
-      # Prebuilt binary (like the msrv job in rust.yml): the tool's own rustc
-      # requirement must not be coupled to the workspace's pinned toolchain.
-      - name: install cargo-about
-        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
-        with:
-          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
-
       - name: Build
         run: |
           cargo build --target=${{ env.TARGET }} -p kble-serialport --release --locked
@@ -156,13 +138,6 @@ jobs:
           toolchain: stable
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-
-      # Prebuilt binary (like the msrv job in rust.yml): the tool's own rustc
-      # requirement must not be coupled to the workspace's pinned toolchain.
-      - name: install cargo-about
-        uses: taiki-e/install-action@fd2f5e3d644b484055ebf4268f474c565f148f25 # v2.81.9
-        with:
-          tool: cargo-about@${{ env.CARGO_ABOUT_VERSION }}
 
       - name: cargo publish (dry-run)
         run: |
