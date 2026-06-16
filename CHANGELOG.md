@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Release: ship glibc (dynamically linked) Linux binaries for `x86_64` and `aarch64`, alongside the existing musl (static) ones. Built with `cross`, whose Ubuntu 20.04 based images keep the binaries runnable on systems with glibc 2.31 or newer; a `verify-release-binary.sh` check enforces that floor so a non-portable build fails the release.
+- Release: ship glibc (dynamically linked) Linux binaries for `x86_64` and `aarch64`, alongside the existing musl (static) ones. Built with `cross`, whose Ubuntu 20.04 based images keep the binaries runnable on systems with glibc 2.31 or newer; a `verify-release-binary.sh` check enforces that floor (and the musl binaries' static linkage) so a non-portable build fails the release ([#244](https://github.com/arkedge/kble/pull/244)).
 
 ## [0.5.0] - 2026-06-16
 

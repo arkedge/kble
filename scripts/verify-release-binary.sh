@@ -98,10 +98,14 @@ echo "verifying $bin (--libc $libc, arch $bin_arch)"
 # --- check 1: linkage --------------------------------------------------------
 file_out="$(file "$bin")"
 if [[ "$libc" == "musl" ]]; then
-  if [[ "$file_out" == *"statically linked"* ]]; then
-    pass "statically linked (musl)"
+  # A musl release binary is fully static: it carries no dynamic loader. `file`
+  # may report that as "statically linked" or, for the static-PIE that modern
+  # rustc emits, "static-pie linked" — so the invariant we assert is simply the
+  # absence of a program interpreter / dynamic linkage, not a fixed wording.
+  if [[ "$file_out" == *"dynamically linked"* || "$file_out" == *"interpreter"* ]]; then
+    bad "expected a static musl binary, got: $file_out"
   else
-    bad "expected a statically linked binary, got: $file_out"
+    pass "statically linked (musl)"
   fi
 else # gnu
   if [[ "$file_out" == *"dynamically linked"* && "$file_out" == *"interpreter"* ]]; then

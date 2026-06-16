@@ -64,6 +64,16 @@ jobs:
           done
           ls -lh ./bin
 
+      # Mirror the gnu job's guard for the static musl binaries: assert each is
+      # fully static (no dynamic loader). The x86_64 ones also get a `--help`
+      # smoke run; the aarch64 ones are checked structurally only (can't execute
+      # on the x86_64 runner). No glibc floor applies to a static binary.
+      - name: Verify binaries are static musl builds
+        run: |
+          for f in ./bin/* ; do
+            ./scripts/verify-release-binary.sh --libc musl "$f"
+          done
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-executable-${{ matrix.target }}
