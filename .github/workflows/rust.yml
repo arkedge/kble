@@ -99,8 +99,9 @@ jobs:
           # past the repo's ~10 GiB Actions cache budget and thrash.
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # The plugs always enable kble-socket with `stdio` + `tungstenite`, so a
-      # workspace build never exercises a single feature on its own. Check every
+      # A workspace build unifies kble-socket's features across all its
+      # consumers (one plug enables `stdio`+`tungstenite`, another `axum`, ...),
+      # so no single-feature combination is ever built on its own. Check every
       # feature combination so a crate that advertises a feature can't ship one
       # that fails to compile by itself.
       - name: install cargo-hack
