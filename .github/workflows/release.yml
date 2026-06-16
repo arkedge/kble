@@ -10,6 +10,10 @@ on:
       - main
     paths:
       - .github/workflows/release.yml
+      # The release build now depends on this verifier, so exercise the build
+      # (and the verify step) when the script changes too — otherwise a broken
+      # verifier would only surface at tag-release time.
+      - scripts/verify-release-binary.sh
 
 jobs:
   build:
@@ -59,6 +63,16 @@ jobs:
             cp "./target/${{ matrix.target }}/release/${b}" "./bin/${b}-${{ matrix.target }}"
           done
           ls -lh ./bin
+
+      # Mirror the gnu job's guard for the static musl binaries: assert each is
+      # fully static (no dynamic loader). The x86_64 ones also get a `--help`
+      # smoke run; the aarch64 ones are checked structurally only (can't execute
+      # on the x86_64 runner). No glibc floor applies to a static binary.
+      - name: Verify binaries are static musl builds
+        run: |
+          for f in ./bin/* ; do
+            ./scripts/verify-release-binary.sh --libc musl "$f"
+          done
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -130,6 +144,73 @@ jobs:
           if-no-files-found: error
           path: ./bin/
 
+  build_gnu:
+    name: build / glibc (${{ matrix.target }})
+    # glibc (dynamically linked) counterparts to the musl binaries built by the
+    # `build` job, shipped alongside them. Built with `cross` rather than a bare
+    # `cargo build`: cross's *-unknown-linux-gnu images are Ubuntu 20.04 based
+    # (glibc 2.31), so the binaries stay runnable on older distros. Building
+    # natively on this ubuntu-24.04 runner would instead bake in its glibc 2.39
+    # symbols and silently produce binaries that won't start on anything older.
+    # Only these gnu targets go through cross; the musl build remains a native
+    # cargo build (with the apt-installed musl-tools / aarch64 linker).
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: true
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Get Rust toolchain
+        id: toolchain
+        working-directory: .
+        run: |
+          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: ${{ steps.toolchain.outputs.toolchain }}
+
+      - name: install cross
+        uses: taiki-e/install-action@15449e3094499af05d8d964a1c884208e4b8b595 # v2.81.11
+        with:
+          tool: cross
+
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
+      - name: Build
+        run: |
+          cross build --target=${{ matrix.target }} --release --locked
+
+      - name: Rename binaries
+        run: |
+          mkdir bin
+          kble_bins=("kble" "kble-c2a" "kble-dump" "kble-eb90" "kble-serialport" "kble-tcp")
+          for b in "${kble_bins[@]}" ; do
+            cp "./target/${{ matrix.target }}/release/${b}" "./bin/${b}-${{ matrix.target }}"
+          done
+          ls -lh ./bin
+
+      # Guard against a non-portable build: assert every binary is a glibc
+      # dynamic executable that runs on a glibc-2.31 system (see the script). The
+      # x86_64 binaries also get a real `--help` smoke run; the aarch64 ones are
+      # checked structurally only (can't execute on the x86_64 runner).
+      - name: Verify binaries are portable glibc builds
+        run: |
+          for f in ./bin/* ; do
+            ./scripts/verify-release-binary.sh --libc gnu "$f"
+          done
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-executable-${{ matrix.target }}
+          if-no-files-found: error
+          path: ./bin/
+
   publish_dry_run:
     name: publish (dry-run)
     runs-on: ubuntu-24.04
@@ -167,7 +248,7 @@ jobs:
 
   release:
     name: Release
-    needs: [ build, build_kble_serialport, publish_dry_run ]
+    needs: [ build, build_gnu, build_kble_serialport, publish_dry_run ]
     permissions:
       contents: write
 

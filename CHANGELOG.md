@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Release: ship glibc (dynamically linked) Linux binaries for `x86_64` and `aarch64`, alongside the existing musl (static) ones. Built with `cross`, whose Ubuntu 20.04 based images keep the binaries runnable on systems with glibc 2.31 or newer; a `verify-release-binary.sh` check enforces that floor (and the musl binaries' static linkage) so a non-portable build fails the release ([#244](https://github.com/arkedge/kble/pull/244)).
+
 ## [0.5.0] - 2026-06-16
 
 ### Added
