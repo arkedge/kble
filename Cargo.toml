@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.4.2"
+version = "0.5.0"
 description = "Virtual Harness Toolkit"
 repository = "https://github.com/arkedge/kble"
 license = "MIT"
@@ -35,7 +35,7 @@ clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"]}
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-kble-socket = "0.4"
+kble-socket = "0.5"
 # Capped below 1.7: proptest 1.7+ pulls rand 0.9/getrandom 0.3, which raise the
 # MSRV above this workspace's pinned toolchain (see rust-toolchain). Default
 # features (fork/timeout) are dropped to avoid the tempfile -> wit-bindgen path,
