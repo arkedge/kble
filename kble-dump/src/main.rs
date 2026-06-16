@@ -85,7 +85,7 @@ impl<'a> DumpRecord<'a> {
 async fn run_record(output_dir: &PathBuf) -> Result<()> {
     tokio::fs::create_dir_all(output_dir).await?;
     let time = chrono::Local::now().format("%Y%m%d_%H%M%S_%f");
-    let path = output_dir.join(format!("dump_{}.bin", time));
+    let path = output_dir.join(format!("dump_{time}.bin"));
     tracing::info!("Recording to {:?}", path);
     let mut file = tokio::fs::File::create(&path).await?;
 

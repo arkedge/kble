@@ -6,7 +6,7 @@ const TC_SEG_HDR_SIZE: usize = 1;
 const TC_TF_FECF_SIZE: usize = 2;
 pub fn from_tc_tf(mut tc_tf: Bytes) -> Result<Bytes> {
     if tc_tf.len() < TC_TF_PH_SIZE + TC_SEG_HDR_SIZE + TC_TF_FECF_SIZE {
-        return Err(anyhow!("TC Transfer Frame is too short: {:02x}", tc_tf));
+        return Err(anyhow!("TC Transfer Frame is too short: {tc_tf:02x}"));
     }
     let _ = tc_tf.split_off(tc_tf.len() - TC_TF_FECF_SIZE);
     let _ = tc_tf.split_to(TC_TF_PH_SIZE + TC_SEG_HDR_SIZE);
@@ -50,7 +50,7 @@ fn build_idle_packet(idle_len: usize) -> BytesMut {
     buf.extend_from_slice(&IDLE_PACKET_PH_EXCEPT_LEN);
     // PacketDataLength = (Data Field length) - 1  (CCSDS 133.0-B-1 §4.1.3.5.4)
     buf.extend_from_slice(&((data_field_len - 1) as u16).to_be_bytes());
-    buf.extend(std::iter::repeat(0u8).take(data_field_len));
+    buf.extend(std::iter::repeat_n(0u8, data_field_len));
     debug_assert_eq!(buf.len(), idle_len);
     buf
 }
@@ -84,7 +84,7 @@ fn assemble_tf(frame_count: &mut u32, fhp: u16, data_zone: &[u8]) -> BytesMut {
 pub fn to_aos_tfs(frame_count: &mut u32, spacepacket: Bytes) -> Result<Vec<BytesMut>> {
     let l = spacepacket.len();
     if l < MIN_SPACE_PACKET_SIZE {
-        return Err(anyhow!("Space Packet is too short: {} bytes", l));
+        return Err(anyhow!("Space Packet is too short: {l} bytes"));
     }
 
     let mut frames = Vec::new();
@@ -167,8 +167,8 @@ mod tests {
     ///
     /// Layout: PH[0..6) | body[6..total_len)
     /// - PH: version=0, type=0 (TLM), sec_hdr_flag=1, APID=0x042
-    ///       seq_flags=11 (unsegmented), seq_count=0
-    ///       PacketDataLength = total_len - 7  (= body_len - 1)
+    ///   seq_flags=11 (unsegmented), seq_count=0
+    ///   PacketDataLength = total_len - 7  (= body_len - 1)
     fn make_sp(total_len: usize) -> Bytes {
         assert!(total_len >= MIN_SPACE_PACKET_SIZE, "total_len must be >= 7");
         let mut v = BytesMut::with_capacity(total_len);
@@ -230,16 +230,15 @@ mod tests {
     fn assert_common(frames: &[BytesMut], expected_count: usize, initial_fc: u32) {
         assert_eq!(frames.len(), expected_count, "frame count mismatch");
         for (i, tf) in frames.iter().enumerate() {
-            assert_eq!(tf.len(), AOS_TF_SIZE, "frame {} has wrong size", i);
+            assert_eq!(tf.len(), AOS_TF_SIZE, "frame {i} has wrong size");
             // AOS TF PH: VN/SCID/VCID prefix
             assert_eq!(
                 &tf[..2],
                 &AOS_TF_PH_VN_SCID_VCID,
-                "frame {} has wrong PH prefix",
-                i
+                "frame {i} has wrong PH prefix"
             );
             // CLCW at tail
-            assert_eq!(&tf[440..444], &AOS_TF_CLCW, "frame {} has wrong CLCW", i);
+            assert_eq!(&tf[440..444], &AOS_TF_CLCW, "frame {i} has wrong CLCW");
         }
         // frame_count advances by one per emitted frame
         // (verified by the caller, which passes the resulting frame_count value)
@@ -347,7 +346,7 @@ mod tests {
         expected.extend_from_slice(&sp);
         expected.extend_from_slice(&IDLE_PACKET_PH_EXCEPT_LEN);
         expected.extend_from_slice(&((idle_data_len - 1) as u16).to_be_bytes());
-        expected.extend(std::iter::repeat(0u8).take(idle_data_len));
+        expected.extend(std::iter::repeat_n(0u8, idle_data_len));
         expected.extend_from_slice(&AOS_TF_CLCW);
 
         assert_eq!(
@@ -442,13 +441,8 @@ mod tests {
         assert_common(&frames, 5, 0);
         assert_eq!(fc, 5);
         assert_eq!(fhp(&frames[0]), 0);
-        for i in 1..4 {
-            assert_eq!(
-                fhp(&frames[i]),
-                FHP_NO_HDR,
-                "frame {} should be continuation",
-                i
-            );
+        for (i, frame) in frames.iter().enumerate().skip(1).take(3) {
+            assert_eq!(fhp(frame), FHP_NO_HDR, "frame {i} should be continuation");
         }
         assert_eq!(fhp(&frames[4]), 2048 - 4 * 432); // = 320
         assert_sp_round_trip(&frames, &sp, 0);
