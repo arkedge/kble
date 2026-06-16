@@ -28,7 +28,7 @@ impl Backend {
             Backend::StdioProcess(proc) => {
                 proc.wait()
                     .await
-                    .with_context(|| format!("Failed to wait for {:?}", proc))?;
+                    .with_context(|| format!("Failed to wait for {proc:?}"))?;
                 Ok(())
             }
         }
@@ -73,7 +73,7 @@ async fn connect_exec(url: &Url) -> Result<(Backend, PlugSink, PlugStream)> {
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
-        .with_context(|| format!("Failed to spawn {}", url))?;
+        .with_context(|| format!("Failed to spawn {url}"))?;
     let stdin = proc.stdin.take().unwrap();
     let stdout = proc.stdout.take().unwrap();
     let stdio = ChildStdio { stdin, stdout };
@@ -128,7 +128,7 @@ impl AsyncRead for ChildStdio {
 async fn connect_ws(url: &Url) -> Result<(Backend, PlugSink, PlugStream)> {
     let (wss, _resp) = tokio_tungstenite::connect_async(url)
         .await
-        .with_context(|| format!("Failed to connect to {}", url))?;
+        .with_context(|| format!("Failed to connect to {url}"))?;
     let (stream, sink) = wss_to_pair(wss);
     Ok((Backend::WebSocketClient, stream, sink))
 }
