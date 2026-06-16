@@ -13,7 +13,17 @@ permissions:
   pull-requests: write
 
 jobs:
-  verify-crate:
+  # The crate verification (clippy, fmt, feature-powerset check, unit test) used
+  # to run as a single serial job, so wall-clock was the *sum* of every step.
+  # Since #229 pulled cargo-about in as a library build-dependency (via
+  # notalawyer-build 0.3), that heavy dependency tree is recompiled under each
+  # profile (dev for clippy, check for the powerset, test for the unit tests),
+  # which made the serial job ~36min. The work below is split into independent
+  # jobs that run concurrently (wall-clock ~= the slowest one), fronted by the
+  # `verify-crate` gate job so the branch-protection required check keeps its
+  # name. See issue #235.
+
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -34,11 +44,16 @@ jobs:
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
-      # reviewdog's github-pr-review reporter only works on pull_request events;
-      # on merge_group (and push to main) there is no PR to attach review
-      # comments to, and reviewdog breaks the clippy output pipe (SIGPIPE, exit
-      # 141) as soon as clippy emits anything. clippy is advisory here (warnings
-      # never fail the build), so just skip it outside of PRs.
+      # This job mixes an always-required check (fmt) with an advisory, PR-only
+      # one (clippy):
+      #   - clippy runs only on pull_request and is advisory (warnings never
+      #     fail the build). reviewdog's github-pr-review reporter only works on
+      #     pull_request events; on merge_group (and push to main) there is no PR
+      #     to attach review comments to, and reviewdog breaks the clippy output
+      #     pipe (SIGPIPE, exit 141) as soon as clippy emits anything, so we skip
+      #     it outside of PRs.
+      #   - fmt runs everywhere and is what actually makes this job a meaningful
+      #     gate on merge_group / push.
       - name: reviewdog / clippy
         if: github.event_name == 'pull_request'
         uses: sksat/action-clippy@87e08e0c289f2654fe702b0aaf88c2f1027a3e57 # v1.1.1
@@ -47,6 +62,26 @@ jobs:
 
       - name: format
         run: cargo fmt --all --check
+
+  feature-powerset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          submodules: recursive
+
+      - name: Get Rust toolchain
+        id: toolchain
+        working-directory: .
+        run: |
+          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: ${{ steps.toolchain.outputs.toolchain }}
+
+      - name: cache dependencies
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
       # The plugs always enable kble-socket with `stdio` + `tungstenite`, so a
       # workspace build never exercises a single feature on its own. Check every
@@ -60,8 +95,54 @@ jobs:
       - name: check feature powerset
         run: cargo hack check --feature-powerset --no-dev-deps --workspace
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          submodules: recursive
+
+      - name: Get Rust toolchain
+        id: toolchain
+        working-directory: .
+        run: |
+          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: ${{ steps.toolchain.outputs.toolchain }}
+
+      - name: cache dependencies
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
       - name: unit test
         run: cargo test
+
+  verify-crate:
+    # Aggregate gate over the parallel jobs above. Branch protection requires a
+    # check named `verify-crate`; keeping that name here means the split needs
+    # no ruleset change. It runs unconditionally (`always()`) and fails unless
+    # every dependency reported `success`, so a failed/cancelled/skipped job
+    # cannot leave the required check unreported and silently unblock the merge
+    # queue.
+    needs: [ lint, feature-powerset, test ]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: gate on dependency results
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          POWERSET_RESULT: ${{ needs.feature-powerset.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          echo "lint=$LINT_RESULT feature-powerset=$POWERSET_RESULT test=$TEST_RESULT"
+          for result in "$LINT_RESULT" "$POWERSET_RESULT" "$TEST_RESULT" ; do
+            if [ "$result" != "success" ]; then
+              echo "::error::a required job did not succeed"
+              exit 1
+            fi
+          done
+          echo "all required jobs succeeded"
 
   msrv:
     runs-on: ubuntu-latest
