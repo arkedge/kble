@@ -78,12 +78,19 @@ async fn spawn_server() -> (Child, u16) {
 }
 
 /// Spawn kble-serialport, create a pty pair, open a WebSocket to `/open` pointed
-/// at the pty slave, and hand back the child, the connected WS client, and the
-/// pty master — the "device" end the test reads from and writes to.
-async fn spawn_bridge() -> (Child, Ws, TTYPort) {
+/// at the pty slave, and hand back the child, the connected WS client, the pty
+/// master (the "device" end the test reads from and writes to), and the pty
+/// slave handle, which the caller must keep alive — see below.
+async fn spawn_bridge() -> (Child, Ws, TTYPort, TTYPort) {
     let (master, slave) = TTYPort::pair().expect("create pty pair");
-    let slave_name = slave.name().expect("slave pty has a /dev/pts path");
-    drop(slave); // kble-serialport reopens it by name via tokio_serial
+    // /dev/pts/N on Linux, /dev/ttysNNN on macOS — kble-serialport just needs a path.
+    let slave_name = slave.name().expect("slave pty has a device path");
+    // kble-serialport opens the slave by this name. We deliberately keep our own
+    // `slave` handle open for the whole test instead of dropping it here: on macOS,
+    // closing the last slave fd tears the pts down, so the reopen-by-name lands on
+    // a node that is no longer a tty and `tcgetattr` fails with ENOTTY ("Not a
+    // typewriter"). Holding it open keeps the pts alive; a tty has a single shared
+    // input queue that kble-serialport drains, so our unread handle steals no bytes.
 
     let (child, port) = spawn_server().await;
 
@@ -91,7 +98,7 @@ async fn spawn_bridge() -> (Child, Ws, TTYPort) {
     let (ws, _resp) = tokio_tungstenite::connect_async(url)
         .await
         .expect("websocket upgrade against the serial bridge");
-    (child, ws, master)
+    (child, ws, master, slave)
 }
 
 /// Write bytes to the pty master (the "device"), handing the master back so a
@@ -145,7 +152,7 @@ async fn ws_recv_n(ws: &mut Ws, n: usize) -> Vec<u8> {
 /// device -> WS: bytes from the serial device surface as binary WS frames.
 #[tokio::test]
 async fn forwards_serial_bytes_to_the_websocket() {
-    let (mut child, mut ws, master) = spawn_bridge().await;
+    let (mut child, mut ws, master, _slave) = spawn_bridge().await;
 
     let payload = b"bytes from the serial device";
     let _master = device_write(master, payload).await;
@@ -160,7 +167,7 @@ async fn forwards_serial_bytes_to_the_websocket() {
 /// WS -> device: a binary WS frame is written to the serial device.
 #[tokio::test]
 async fn forwards_websocket_frames_to_the_serial_device() {
-    let (mut child, mut ws, master) = spawn_bridge().await;
+    let (mut child, mut ws, master, _slave) = spawn_bridge().await;
 
     let payload = b"bytes for the serial device";
     ws.send(Message::Binary(payload.to_vec()))
@@ -178,7 +185,7 @@ async fn forwards_websocket_frames_to_the_serial_device() {
 /// several frames but reassembles to the original bytes.
 #[tokio::test]
 async fn reassembles_a_large_serial_payload_across_frames() {
-    let (mut child, mut ws, master) = spawn_bridge().await;
+    let (mut child, mut ws, master, _slave) = spawn_bridge().await;
 
     // > 4096 so kble-serialport needs multiple reads, i.e. emits several frames.
     let payload = vec![0x5Au8; 20_000];
