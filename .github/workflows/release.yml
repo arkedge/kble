@@ -66,21 +66,30 @@ jobs:
           if-no-files-found: error
           path: ./bin/
 
-  build_kble_serialport_win:
-    name: build / kble-serialport.exe
-    # C2A Boom ecosystem does **NOT** support native Windows environment.
-    # However, WSL2 environment is supported and has many use cases in the real world.
-    # Here, there are difficulties in running kble-serialport inside WSL2,
-    #  a component that interfaces with external hardware (USB-RS devices).
-    # Although it is possible to show a Windows host USB devices
-    #  to a WSL2 Linux VM using the usbipd-win project, this is still a bit unstable.
-    # Also, kble-serialport is a very small component that does not need to be updated frequently for practical use.
-    # For these reasons, we currently choose to run only kble-serialport on Windows host.
+  build_kble_serialport:
+    name: build / kble-serialport (${{ matrix.target }})
+    # The C2A Boom ecosystem is not validated on native Windows or macOS, so the
+    # rest of the toolkit is built for Linux only (see the `build` job).
+    # kble-serialport is the lone exception: it talks to local serial hardware
+    # (USB-RS devices), so it has to run on the host OS rather than inside a Linux
+    # VM. On Windows, exposing host USB to a WSL2 VM via the usbipd-win project is
+    # still a bit unstable, so kble-serialport runs on the Windows host directly;
+    # macOS is likewise a best-effort, non-first-party target. kble-serialport is
+    # small and rarely changes, so shipping just it for these hosts is enough.
+    # One macos-latest (Apple Silicon) runner cross-builds the x86_64 target too —
+    # the preinstalled Xcode ships both-arch SDKs, so no extra linker is needed.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            os: windows-2025
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
 
-    runs-on: windows-2025
-
-    env:
-      TARGET: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -95,24 +104,29 @@ jobs:
       - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: ${{ steps.toolchain.outputs.toolchain }}
-          targets: ${{ env.TARGET }}
+          targets: ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
       - name: Build
         run: |
-          cargo build --target=${{ env.TARGET }} -p kble-serialport --release --locked
+          cargo build --target=${{ matrix.target }} -p kble-serialport --release --locked
 
+      # Windows binaries carry a .exe suffix; the apple-darwin ones do not.
       - name: Rename binary
         shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           mkdir bin
-          cp "./target/${{ env.TARGET }}/release/kble-serialport.exe" "./bin/kble-serialport-${{ env.TARGET }}.exe"
+          ext=""
+          [[ "$TARGET" == *windows* ]] && ext=".exe"
+          cp "./target/${TARGET}/release/kble-serialport${ext}" "./bin/kble-serialport-${TARGET}${ext}"
           ls -lh ./bin
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: release-executable-${{ env.TARGET }}
+          name: release-executable-${{ matrix.target }}
           if-no-files-found: error
           path: ./bin/
 
@@ -153,7 +167,7 @@ jobs:
 
   release:
     name: Release
-    needs: [ build, build_kble_serialport_win, publish_dry_run ]
+    needs: [ build, build_kble_serialport, publish_dry_run ]
     permissions:
       contents: write
 
