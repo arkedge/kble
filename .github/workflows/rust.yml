@@ -43,6 +43,14 @@ jobs:
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          # Persist the cache only from pushes to main; PRs and merge_group runs
+          # restore from main's cache (via restore-keys) but don't each save
+          # their own. rust-cache keys include the job name, so splitting
+          # verify-crate into three jobs (#235) tripled the cache count; with
+          # Renovate's frequent Cargo.lock churn, saving on every ref would blow
+          # past the repo's ~10 GiB Actions cache budget and thrash.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # This job mixes an always-required check (fmt) with an advisory, PR-only
       # one (clippy):
@@ -82,6 +90,14 @@ jobs:
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          # Persist the cache only from pushes to main; PRs and merge_group runs
+          # restore from main's cache (via restore-keys) but don't each save
+          # their own. rust-cache keys include the job name, so splitting
+          # verify-crate into three jobs (#235) tripled the cache count; with
+          # Renovate's frequent Cargo.lock churn, saving on every ref would blow
+          # past the repo's ~10 GiB Actions cache budget and thrash.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # The plugs always enable kble-socket with `stdio` + `tungstenite`, so a
       # workspace build never exercises a single feature on its own. Check every
@@ -114,6 +130,14 @@ jobs:
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          # Persist the cache only from pushes to main; PRs and merge_group runs
+          # restore from main's cache (via restore-keys) but don't each save
+          # their own. rust-cache keys include the job name, so splitting
+          # verify-crate into three jobs (#235) tripled the cache count; with
+          # Renovate's frequent Cargo.lock churn, saving on every ref would blow
+          # past the repo's ~10 GiB Actions cache budget and thrash.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: unit test
         run: cargo test
@@ -162,6 +186,14 @@ jobs:
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          # Persist the cache only from pushes to main; PRs and merge_group runs
+          # restore from main's cache (via restore-keys) but don't each save
+          # their own. rust-cache keys include the job name, so splitting
+          # verify-crate into three jobs (#235) tripled the cache count; with
+          # Renovate's frequent Cargo.lock churn, saving on every ref would blow
+          # past the repo's ~10 GiB Actions cache budget and thrash.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # Verify the declared MSRV actually compiles. --all-targets pulls in the
       # dev-dependencies (notably proptest, which is version-capped in Cargo.toml
