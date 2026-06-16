@@ -174,6 +174,13 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
+      # Checked out into a subdir so the repo's `kble*` crate directories don't
+      # collide with the `kble*` release-binary glob below. Only needed for
+      # CHANGELOG.md; defaults to the tag ref that triggered this run.
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          path: repo
+
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: release-executable-*
@@ -183,6 +190,23 @@ jobs:
 
       - run: ls -lh
 
+      # Pull this version's CHANGELOG section into the release body. With
+      # generate_release_notes, action-gh-release pre-pends body to the
+      # auto-generated "What's Changed" notes. Fails if the tag has no section,
+      # to keep CHANGELOG.md and releases in lockstep.
+      - name: Extract CHANGELOG section for ${{ github.ref_name }}
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          awk -v hdr="## [${ver}]" '
+            index($0, hdr) == 1 { found = 1; capture = 1; next }
+            capture && /^## \[/ { capture = 0 }
+            capture { print }
+            END { if (!found) { print "no CHANGELOG section for " hdr > "/dev/stderr"; exit 1 } }
+          ' repo/CHANGELOG.md > "$RUNNER_TEMP/release-body.md"
+          echo "----- release body -----"
+          cat "$RUNNER_TEMP/release-body.md"
+
       - name: Release to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
@@ -190,5 +214,6 @@ jobs:
           draft: true
           fail_on_unmatched_files: true
           generate_release_notes: true
+          body_path: ${{ runner.temp }}/release-body.md
           files: |
             kble*
