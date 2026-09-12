@@ -105,7 +105,7 @@ jobs:
       # feature combination so a crate that advertises a feature can't ship one
       # that fails to compile by itself.
       - name: install cargo-hack
-        uses: taiki-e/install-action@15449e3094499af05d8d964a1c884208e4b8b595 # v2.81.11
+        uses: taiki-e/install-action@3f74d7c16a4242f1c95561e98edc25d36adb4375 # v2.87.12
         with:
           tool: cargo-hack
 
